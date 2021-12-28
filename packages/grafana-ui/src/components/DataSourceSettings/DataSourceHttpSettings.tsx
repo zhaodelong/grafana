@@ -12,7 +12,6 @@ import { Icon } from '../Icon/Icon';
 import { FormField } from '../FormField/FormField';
 import { InlineFormLabel } from '../FormLabel/FormLabel';
 import { TagsInput } from '../TagsInput/TagsInput';
-import { SigV4AuthSettings } from './SigV4AuthSettings';
 import { useTheme } from '../../themes';
 import { HttpSettingsProps } from './types';
 
@@ -64,6 +63,7 @@ export const DataSourceHttpSettings: React.FC<HttpSettingsProps> = (props) => {
     sigV4AuthToggleEnabled,
     showForwardOAuthIdentityOption,
     azureAuthSettings,
+    renderSigV4Editor,
   } = props;
   let urlTooltip;
   const [isAccessHelpVisible, setIsAccessHelpVisible] = useState(false);
@@ -273,8 +273,7 @@ export const DataSourceHttpSettings: React.FC<HttpSettingsProps> = (props) => {
             <azureAuthSettings.azureSettingsUI dataSourceConfig={dataSourceConfig} onChange={onChange} />
           )}
 
-        {dataSourceConfig.jsonData.sigV4Auth && sigV4AuthToggleEnabled && <SigV4AuthSettings {...props} />}
-
+        {dataSourceConfig.jsonData.sigV4Auth && sigV4AuthToggleEnabled && renderSigV4Editor}
         {(dataSourceConfig.jsonData.tlsAuth || dataSourceConfig.jsonData.tlsAuthWithCACert) && (
           <TLSAuthSettings dataSourceConfig={dataSourceConfig} onChange={onChange} />
         )}

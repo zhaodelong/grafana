@@ -1,6 +1,7 @@
 import React from 'react';
 import { AlertingSettings, DataSourceHttpSettings, Alert } from '@grafana/ui';
 import { DataSourcePluginOptionsEditorProps } from '@grafana/data';
+import { SigV4ConnectionConfig } from '@grafana/aws-sdk';
 import { config } from 'app/core/config';
 import { PromOptions } from '../types';
 import { AzureAuthSettings } from './AzureAuthSettings';
@@ -32,6 +33,7 @@ export const ConfigEditor = (props: Props) => {
         onChange={onOptionsChange}
         sigV4AuthToggleEnabled={config.sigV4AuthEnabled}
         azureAuthSettings={azureAuthSettings}
+        renderSigV4Editor={<SigV4ConnectionConfig {...props}></SigV4ConnectionConfig>}
       />
 
       <AlertingSettings<PromOptions>
