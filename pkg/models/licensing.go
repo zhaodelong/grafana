@@ -14,10 +14,11 @@ type Licensing interface {
 
 	StateInfo() string
 
-	// List the enabled features
-	EnabledFeatures() map[string]bool
-
+	// still necessary?
 	FeatureEnabled(feature string) bool
+
+	// List the possible features
+	ListFeatures() []FeatureFlag
 }
 
 type LicenseEnvironment interface {
