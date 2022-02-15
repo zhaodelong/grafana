@@ -288,7 +288,7 @@ func (ss *SQLStore) GetTeamById(ctx context.Context, query *models.GetTeamByIdQu
 	params = append(params, query.UserIdFilter)
 
 	if query.UserIdFilter != models.FilterIgnoreUser {
-		sql.WriteString(` AND team_member.user_id = ?`)
+		sql.WriteString(` WHERE team_member.user_id = ?`)
 		params = append(params, query.UserIdFilter)
 	}
 
