@@ -67,7 +67,7 @@ func getTeamMemberCount(filteredUsers []string) string {
 }
 
 // getTeamSelectSQLBase returns the select statement to list all teams and a user permission in them
-// (permission is null if the user is not part of team)
+// (permission is null if the user is not a member of a team)
 func getTeamSelectSQLBase(filteredUsers []string) string {
 	return `SELECT
 		team.id AS id,
