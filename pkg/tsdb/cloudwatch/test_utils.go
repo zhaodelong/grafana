@@ -29,10 +29,13 @@ type FakeCWLogsClient struct {
 }
 
 type logsQueryCalls struct {
-	startQueryWithContext []*cloudwatchlogs.StartQueryInput
+	startQueryWithContext      []*cloudwatchlogs.StartQueryInput
+	getQueryResultsWithContext []*cloudwatchlogs.GetQueryResultsInput
 }
 
 func (m *FakeCWLogsClient) GetQueryResultsWithContext(ctx context.Context, input *cloudwatchlogs.GetQueryResultsInput, option ...request.Option) (*cloudwatchlogs.GetQueryResultsOutput, error) {
+	m.calls.getQueryResultsWithContext = append(m.calls.getQueryResultsWithContext, input)
+
 	return &m.queryResults, nil
 }
 
@@ -194,9 +197,28 @@ func newTestConfig() *setting.Cfg {
 }
 
 type fakeSessionCache struct {
+	callRegions []string
 }
 
-func (s fakeSessionCache) GetSession(c awsds.SessionConfig) (*session.Session, error) {
+func (s *fakeSessionCache) GetSession(c awsds.SessionConfig) (*session.Session, error) {
+	s.callRegions = append(s.callRegions, c.Settings.Region)
+
+	return &session.Session{
+		Config: &aws.Config{},
+	}, nil
+}
+
+type fakeSessionCacheForLogAlerts struct {
+	calls sessionCalls
+}
+
+type sessionCalls struct {
+	region []string
+}
+
+func (s *fakeSessionCacheForLogAlerts) GetSession(c awsds.SessionConfig) (*session.Session, error) {
+	s.calls.region = append(s.calls.region, c.Settings.Region)
+
 	return &session.Session{
 		Config: &aws.Config{},
 	}, nil
