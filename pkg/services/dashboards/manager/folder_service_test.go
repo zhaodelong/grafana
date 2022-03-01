@@ -19,8 +19,11 @@ import (
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/guardian"
 	"github.com/grafana/grafana/pkg/services/sqlstore/mockstore"
+	starstests "github.com/grafana/grafana/pkg/services/stars/starstests"
 	"github.com/grafana/grafana/pkg/setting"
-	"github.com/grafana/grafana/pkg/util"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
+	"github.com/stretchr/testify/require"
 )
 
 var orgID = int64(1)
@@ -32,7 +35,7 @@ func TestProvideFolderService(t *testing.T) {
 		cfg := setting.NewCfg()
 		features := featuremgmt.WithFeatures()
 		permissionsServices := acmock.NewPermissionsServicesMock()
-		dashboardService := ProvideDashboardService(cfg, store, nil, features, permissionsServices)
+		dashboardService := ProvideDashboardService(cfg, store, nil, features, permissionsServices, starsFake)
 		ac := acmock.New()
 
 		ProvideFolderService(
@@ -48,6 +51,8 @@ func TestFolderService(t *testing.T) {
 	t.Run("Folder service tests", func(t *testing.T) {
 		store := &dashboards.FakeDashboardStore{}
 		cfg := setting.NewCfg()
+		starsFake := starstests.NewStarsServiceFake()
+		defer store.AssertExpectations(t)
 		features := featuremgmt.WithFeatures()
 		permissionsServices := acmock.NewPermissionsServicesMock()
 		dashboardService := ProvideDashboardService(cfg, store, nil, features, permissionsServices)
