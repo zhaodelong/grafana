@@ -426,4 +426,36 @@ func TestCloudWatchResponseParser(t *testing.T) {
 		assert.Equal(t, "Value", frame.Fields[1].Name)
 		assert.Equal(t, "", frame.Fields[1].Config.DisplayName)
 	})
+
+	t.Run("Unknown alias are returned as-is", func(t *testing.T) {
+		response := &queryRowResponse{
+			Labels: []string{"lb"},
+			Metrics: map[string]*cloudwatch.MetricDataResult{
+				"lb": {
+					Id:         aws.String("id1"),
+					Label:      aws.String("lb"),
+					Timestamps: []*time.Time{},
+					Values:     []*float64{},
+				},
+			},
+		}
+
+		query := &cloudWatchQuery{
+			RefId:            "refId1",
+			Region:           "us-east-1",
+			Namespace:        "AWS/ApplicationELB",
+			MetricName:       "TargetResponseTime",
+			Dimensions:       map[string][]string{},
+			Statistic:        "Average",
+			Period:           60,
+			Alias:            "{{unknown}}",
+			MetricQueryType:  MetricQueryTypeSearch,
+			MetricEditorMode: MetricEditorModeBuilder,
+		}
+		frames, err := buildDataFrames(startTime, endTime, *response, query)
+		require.NoError(t, err)
+
+		require.Len(t, frames, 1)
+		assert.Equal(t, "{{unknown}}", frames[0].Name)
+	})
 }
