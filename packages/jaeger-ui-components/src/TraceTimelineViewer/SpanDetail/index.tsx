@@ -18,12 +18,12 @@ import React from 'react';
 import IoLink from 'react-icons/lib/io/link';
 
 import { GrafanaTheme2, LinkModel } from '@grafana/data';
-import { DataLinkButton, TextArea, useStyles2 } from '@grafana/ui';
+import { TextArea, useStyles2 } from '@grafana/ui';
 
 import { autoColor } from '../../Theme';
 import { Divider } from '../../common/Divider';
 import LabeledList from '../../common/LabeledList';
-import { SpanLinkFunc, TNil } from '../../types';
+import { TNil } from '../../types';
 import { TraceKeyValuePair, TraceLink, TraceLog, TraceSpan, TraceSpanReference } from '../../types/trace';
 import { uAlignIcon, ubM0, ubMb1, ubMy1, ubTxRightAlign } from '../../uberUtilityStyles';
 import { TopOfViewRefType } from '../VirtualizedTraceView';
@@ -117,7 +117,6 @@ type SpanDetailProps = {
   referenceItemToggle: (spanID: string, reference: TraceSpanReference) => void;
   referencesToggle: (spanID: string) => void;
   focusSpan: (uiFind: string) => void;
-  createSpanLink?: SpanLinkFunc;
   focusedSpanId?: string;
   createFocusSpanLink: (traceId: string, spanId: string) => LinkModel;
   topOfViewRefType?: TopOfViewRefType;
@@ -138,7 +137,6 @@ export default function SpanDetail(props: SpanDetailProps) {
     referencesToggle,
     referenceItemToggle,
     focusSpan,
-    createSpanLink,
     createFocusSpanLink,
     topOfViewRefType,
   } = props;
@@ -190,7 +188,6 @@ export default function SpanDetail(props: SpanDetailProps) {
       : []),
   ];
   const styles = useStyles2(getStyles);
-  const link = createSpanLink?.(span);
   const focusSpanLink = createFocusSpanLink(traceID, spanID);
 
   return (
@@ -201,9 +198,6 @@ export default function SpanDetail(props: SpanDetailProps) {
           <LabeledList className={ubTxRightAlign} divider={true} items={overviewItems} />
         </div>
       </div>
-      {link ? (
-        <DataLinkButton link={{ ...link, title: 'Logs for this span' } as any} buttonProps={{ icon: 'gf-logs' }} />
-      ) : null}
       <Divider className={ubMy1} type={'horizontal'} />
       <div>
         <div>

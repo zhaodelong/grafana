@@ -19,7 +19,6 @@ import { GrafanaTheme2, LinkModel } from '@grafana/data';
 import { stylesFactory, withTheme2 } from '@grafana/ui';
 
 import { autoColor } from '../Theme';
-import { SpanLinkFunc } from '../types';
 import { TraceLog, TraceSpan, TraceKeyValuePair, TraceLink, TraceSpanReference } from '../types/trace';
 
 import SpanDetail from './SpanDetail';
@@ -91,7 +90,6 @@ type SpanDetailRowProps = {
   addHoverIndentGuideId: (spanID: string) => void;
   removeHoverIndentGuideId: (spanID: string) => void;
   theme: GrafanaTheme2;
-  createSpanLink?: SpanLinkFunc;
   focusedSpanId?: string;
   createFocusSpanLink: (traceId: string, spanId: string) => LinkModel;
   topOfViewRefType?: TopOfViewRefType;
@@ -127,7 +125,6 @@ export class UnthemedSpanDetailRow extends React.PureComponent<SpanDetailRowProp
       addHoverIndentGuideId,
       removeHoverIndentGuideId,
       theme,
-      createSpanLink,
       focusedSpanId,
       createFocusSpanLink,
       topOfViewRefType,
@@ -170,7 +167,6 @@ export class UnthemedSpanDetailRow extends React.PureComponent<SpanDetailRowProp
               tagsToggle={tagsToggle}
               traceStartTime={traceStartTime}
               focusSpan={focusSpan}
-              createSpanLink={createSpanLink}
               focusedSpanId={focusedSpanId}
               createFocusSpanLink={createFocusSpanLink}
               topOfViewRefType={topOfViewRefType}
