@@ -32,6 +32,7 @@ var user = &models.SignedInUser{UserId: 1}
 func TestProvideFolderService(t *testing.T) {
 	t.Run("should register scope resolvers", func(t *testing.T) {
 		store := &dashboards.FakeDashboardStore{}
+		starsFake := startest.NewStarsServiceFake()
 		cfg := setting.NewCfg()
 		features := featuremgmt.WithFeatures()
 		permissionsServices := acmock.NewPermissionsServicesMock()
