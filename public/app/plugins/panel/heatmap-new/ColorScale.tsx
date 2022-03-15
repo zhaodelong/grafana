@@ -67,7 +67,7 @@ export const ColorScale = ({ colorPalette, min, max, display }: Props) => {
       {/*</div>*/}
 
       <div className={styles.sliderWrapper}>
-        <ColorScaleRange colors={colors} min={min} max={max} value={rangeValue} onChange={onRangeChange} />
+        <ColorScaleRange bgColors={colors} min={min} max={max} value={rangeValue} onChange={onRangeChange} />
       </div>
     </div>
   );

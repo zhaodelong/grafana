@@ -6,39 +6,44 @@ import { useTheme2 } from '@grafana/ui';
 import { Range as RangeComponent, createSliderWithTooltip } from 'rc-slider';
 
 type Props = {
-  colors: string[];
+  bgColors: string[];
   min: number;
   max: number;
   value?: number[];
   onChange?: (value: number[]) => void;
   onAfterChange?: (value?: number[]) => void;
-  formatTooltipResult?: (value: number) => number | string;
+  tooltipAlwaysVisible?: boolean;
 };
 
 const RangeWithTooltip = createSliderWithTooltip(RangeComponent);
 
 export const ColorScaleRange = ({
-  colors,
+  bgColors,
   min,
   max,
   value = [min, max],
   onChange,
   onAfterChange,
-  formatTooltipResult,
+  tooltipAlwaysVisible = true,
 }: Props) => {
   const isHorizontal = true;
   const theme = useTheme2();
-  const styles = getStyles(theme, isHorizontal, false, colors);
+  const styles = getStyles(theme, isHorizontal, false, bgColors);
 
   return (
     <div className={cx(styles.container, styles.slider)}>
       <Global styles={styles.tooltip} />
       <RangeWithTooltip
+        tipProps={{
+          visible: tooltipAlwaysVisible,
+          placement: isHorizontal ? 'top' : 'right',
+        }}
         min={min}
         max={max}
         defaultValue={value}
         reverse={false}
         onChange={onChange}
+        onAfterChange={onAfterChange}
         tabIndex={[0, 1]}
         allowCross={false}
       />
@@ -100,6 +105,7 @@ const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false
       .rc-slider-track {
         height: 6px;
         background: linear-gradient(90deg, ${colors.join()});
+        background-size: 300px 100%;
       }
       .rc-slider-rail {
         height: 6px;
