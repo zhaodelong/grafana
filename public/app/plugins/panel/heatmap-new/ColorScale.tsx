@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { css } from '@emotion/css';
 import { GrafanaTheme2 } from '@grafana/data';
-import { useTheme2, VizTooltipContainer, RangeSlider } from '@grafana/ui';
+import { useTheme2 } from '@grafana/ui';
 import { ColorScaleRange } from './ColorScaleRange';
+import { MouseTooltip } from './MouseTooltip';
 
 type Props = {
   colorPalette: string[];
@@ -21,7 +22,6 @@ type HoverState = {
 export const ColorScale = ({ colorPalette, min, max, display }: Props) => {
   const [colors, setColors] = useState<string[]>([]);
   const [hover, setHover] = useState<HoverState>({ isShown: false, value: 0 });
-  const [cursor, setCursor] = useState({ clientX: 0, clientY: 0 });
   const [rangeValue, setRangeValue] = useState<number[]>([min, max]);
 
   useEffect(() => {
@@ -29,7 +29,7 @@ export const ColorScale = ({ colorPalette, min, max, display }: Props) => {
   }, [colorPalette]);
 
   const theme = useTheme2();
-  const styles = getStyles(theme, colors);
+  const styles = getStyles(theme);
 
   const onScaleMouseMove = (event: React.MouseEvent<HTMLDivElement>) => {
     const divOffset = event.nativeEvent.offsetX;
@@ -37,7 +37,6 @@ export const ColorScale = ({ colorPalette, min, max, display }: Props) => {
     const normPercentage = Math.floor((divOffset * 100) / offsetWidth + 1);
     const scaleValue = Math.floor(((max - min) * normPercentage) / 100 + min);
     setHover({ isShown: true, value: scaleValue });
-    setCursor({ clientX: event.clientX, clientY: event.clientY });
   };
 
   const onScaleMouseLeave = () => {
@@ -46,28 +45,26 @@ export const ColorScale = ({ colorPalette, min, max, display }: Props) => {
 
   const onRangeChange = (val: number[]) => {
     setRangeValue(val);
+    onScaleMouseLeave();
   };
 
   return (
     <div className={styles.scaleWrapper}>
-      {/*<div>*/}
-      {/*  <div className={styles.scaleGradient} onMouseMove={onScaleMouseMove} onMouseLeave={onScaleMouseLeave}>*/}
-      {/*    {display && hover.isShown && (*/}
-      {/*      <VizTooltipContainer position={{ x: cursor.clientX, y: cursor.clientY }} offset={{ x: 10, y: 10 }}>*/}
-      {/*        {display(hover.value)}*/}
-      {/*      </VizTooltipContainer>*/}
-      {/*    )}*/}
-      {/*  </div>*/}
-      {/*  {display && (*/}
-      {/*    <div>*/}
-      {/*      <span>{display(min)}</span>*/}
-      {/*      <span className={styles.maxDisplay}>{display(max)}</span>*/}
-      {/*    </div>*/}
-      {/*  )}*/}
-      {/*</div>*/}
-
       <div className={styles.sliderWrapper}>
-        <ColorScaleRange bgColors={colors} min={min} max={max} value={rangeValue} onChange={onRangeChange} />
+        <ColorScaleRange
+          bgColors={colors}
+          min={min}
+          max={max}
+          value={rangeValue}
+          onChange={onRangeChange}
+          onMouseMove={onScaleMouseMove}
+          onMouseLeave={onScaleMouseLeave}
+        />
+        {display && hover.isShown && (
+          <MouseTooltip visible={hover.isShown} offsetX={10} offsetY={10}>
+            <span>{display(hover.value)}</span>
+          </MouseTooltip>
+        )}
       </div>
     </div>
   );
@@ -104,21 +101,14 @@ const getGradientStops = ({ colorArray, stops = 10 }: { colorArray: string[]; st
   return [...gradientStops];
 };
 
-const getStyles = (theme: GrafanaTheme2, colors: string[]) => ({
+const getStyles = (theme: GrafanaTheme2) => ({
   scaleWrapper: css`
     margin: 0 27px;
     padding-top: 10px;
     width: 100%;
-    max-width: 280px;
+    max-width: 300px;
     color: #ccccdc;
     font-size: 11px;
-  `,
-  scaleGradient: css`
-    background: linear-gradient(90deg, ${colors.join()});
-    height: 6px;
-  `,
-  maxDisplay: css`
-    float: right;
   `,
   sliderWrapper: css`
     height: 34px;

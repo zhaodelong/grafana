@@ -12,6 +12,8 @@ type Props = {
   value?: number[];
   onChange?: (value: number[]) => void;
   onAfterChange?: (value?: number[]) => void;
+  onMouseMove?: any;
+  onMouseLeave?: any;
   tooltipAlwaysVisible?: boolean;
 };
 
@@ -24,6 +26,8 @@ export const ColorScaleRange = ({
   value = [min, max],
   onChange,
   onAfterChange,
+  onMouseMove,
+  onMouseLeave,
   tooltipAlwaysVisible = true,
 }: Props) => {
   const isHorizontal = true;
@@ -31,7 +35,7 @@ export const ColorScaleRange = ({
   const styles = getStyles(theme, isHorizontal, false, bgColors);
 
   return (
-    <div className={cx(styles.container, styles.slider)}>
+    <div className={cx(styles.container, styles.slider)} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave}>
       <Global styles={styles.tooltip} />
       <RangeWithTooltip
         tipProps={{
@@ -54,7 +58,6 @@ export const ColorScaleRange = ({
 const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false, colors: string[]) => {
   const { spacing } = theme;
   const railColor = theme.colors.border.strong;
-  const trackColor = theme.colors.primary.main;
   const handleColor = theme.colors.primary.main;
   const blueOpacity = theme.colors.primary.transparent;
   const hoverSyle = `box-shadow: 0px 0px 0px 6px ${blueOpacity}`;
