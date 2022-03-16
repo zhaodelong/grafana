@@ -59,6 +59,7 @@ export const ColorScale = ({ colorPalette, min, max, display }: Props) => {
           onChange={onRangeChange}
           onMouseMove={onScaleMouseMove}
           onMouseLeave={onScaleMouseLeave}
+          isTooltipVisible={hover.isShown}
         />
         {display && hover.isShown && (
           <MouseTooltip visible={hover.isShown} offsetX={10} offsetY={10}>

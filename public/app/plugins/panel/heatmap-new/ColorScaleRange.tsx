@@ -15,6 +15,7 @@ type Props = {
   onMouseMove?: any;
   onMouseLeave?: any;
   tooltipAlwaysVisible?: boolean;
+  isTooltipVisible?: boolean;
 };
 
 const RangeWithTooltip = createSliderWithTooltip(RangeComponent);
@@ -29,10 +30,11 @@ export const ColorScaleRange = ({
   onMouseMove,
   onMouseLeave,
   tooltipAlwaysVisible = true,
+  isTooltipVisible,
 }: Props) => {
   const isHorizontal = true;
   const theme = useTheme2();
-  const styles = getStyles(theme, isHorizontal, false, bgColors);
+  const styles = getStyles(theme, isHorizontal, false, bgColors, isTooltipVisible);
 
   return (
     <div className={cx(styles.container, styles.slider)} onMouseMove={onMouseMove} onMouseLeave={onMouseLeave}>
@@ -55,16 +57,20 @@ export const ColorScaleRange = ({
   );
 };
 
-const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false, colors: string[]) => {
+const getStyles = (
+  theme: GrafanaTheme2,
+  isHorizontal: boolean,
+  hasMarks = false,
+  colors: string[],
+  isTooltipVisible: boolean
+) => {
   const { spacing } = theme;
   const railColor = theme.colors.border.strong;
-  const handleColor = theme.colors.primary.main;
-  const blueOpacity = theme.colors.primary.transparent;
-  const hoverSyle = `box-shadow: 0px 0px 0px 6px ${blueOpacity}`;
 
   return {
     container: css`
       width: 100%;
+      max-width: 300px;
       margin: ${isHorizontal ? 'inherit' : `${spacing(1, 3, 1, 1)}`};
       padding-bottom: ${isHorizontal && hasMarks ? theme.spacing(1) : 'inherit'};
       height: ${isHorizontal ? 'auto' : '100%'};
@@ -73,7 +79,7 @@ const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false
       .rc-slider {
         display: flex;
         flex-grow: 1;
-        margin-left: 2px; // half the size of the handle to align handle to the left on 0 value
+        margin-left: 3px; // half the size of the handle to align handle to the left on 0 value
       }
       .rc-slider-mark {
         top: ${theme.spacing(1.75)};
@@ -90,20 +96,21 @@ const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false
       }
       .rc-slider-handle {
         border: 1px solid #ffffff;
-        background-color: ${handleColor};
-        box-shadow: ${theme.shadows.z1};
-        cursor: pointer;
+        background-color: transparent;
+        box-shadow: none;
+        cursor: ew-resize;
         margin-top: -2px;
-        width: 4px;
+        width: 6px;
         height: 10px;
         border-radius: 2px;
+        transform: none;
       }
       .rc-slider-handle:hover,
       .rc-slider-handle:active,
       .rc-slider-handle:focus,
       .rc-slider-handle-click-focused:focus,
       .rc-slider-dot-active {
-        ${hoverSyle};
+        box-shadow: none;
       }
       .rc-slider-track {
         height: 6px;
@@ -113,7 +120,8 @@ const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false
       .rc-slider-rail {
         height: 6px;
         background-color: ${railColor};
-        cursor: pointer;
+        cursor: ew-resize;
+        background-size: 300px 100%;
       }
     `,
     /** Global component from @emotion/core doesn't accept computed classname string returned from css from emotion.
@@ -122,7 +130,7 @@ const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false
     tooltip: cssCore`
       body {
         .rc-slider-tooltip {
-          cursor: grab;
+          cursor: ew-resize;
           user-select: none;
           z-index: ${theme.zIndex.tooltip};
         }
@@ -132,6 +140,14 @@ const getStyles = (theme: GrafanaTheme2, isHorizontal: boolean, hasMarks = false
           background-color: transparent !important;
           border-radius: 0;
           box-shadow: none;
+
+          ${
+            isTooltipVisible &&
+            `
+            opacity: 0.6;
+            transition: 0.3s;
+          `
+          }
         }
 
         .rc-slider-tooltip-placement-top .rc-slider-tooltip-arrow {
