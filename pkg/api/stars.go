@@ -6,7 +6,6 @@ import (
 
 	"github.com/grafana/grafana/pkg/api/response"
 	"github.com/grafana/grafana/pkg/models"
-	"github.com/grafana/grafana/pkg/services/star"
 	"github.com/grafana/grafana/pkg/web"
 )
 
@@ -15,13 +14,13 @@ func (hs *HTTPServer) StarDashboard(c *models.ReqContext) response.Response {
 	if err != nil {
 		return response.Error(http.StatusBadRequest, "id is invalid", err)
 	}
-	cmd := star.StarDashboardCommand{UserID: c.UserId, DashboardID: id}
+	cmd := models.StarDashboardCommand{UserId: c.UserId, DashboardId: id}
 
-	if cmd.DashboardID <= 0 {
+	if cmd.DashboardId <= 0 {
 		return response.Error(400, "Missing dashboard id", nil)
 	}
 
-	if err := hs.starService.StarDashboard(c.Req.Context(), &cmd); err != nil {
+	if err := hs.SQLStore.StarDashboard(c.Req.Context(), &cmd); err != nil {
 		return response.Error(500, "Failed to star dashboard", err)
 	}
 
@@ -33,13 +32,13 @@ func (hs *HTTPServer) UnstarDashboard(c *models.ReqContext) response.Response {
 	if err != nil {
 		return response.Error(http.StatusBadRequest, "id is invalid", err)
 	}
-	cmd := star.UnstarDashboardCommand{UserID: c.UserId, DashboardID: id}
+	cmd := models.UnstarDashboardCommand{UserId: c.UserId, DashboardId: id}
 
-	if cmd.DashboardID <= 0 {
+	if cmd.DashboardId <= 0 {
 		return response.Error(400, "Missing dashboard id", nil)
 	}
 
-	if err := hs.starService.UnstarDashboard(c.Req.Context(), &cmd); err != nil {
+	if err := hs.SQLStore.UnstarDashboard(c.Req.Context(), &cmd); err != nil {
 		return response.Error(500, "Failed to unstar dashboard", err)
 	}
 

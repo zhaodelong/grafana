@@ -20,7 +20,6 @@ import (
 	"github.com/grafana/grafana/pkg/services/alerting"
 	"github.com/grafana/grafana/pkg/services/dashboards"
 	"github.com/grafana/grafana/pkg/services/guardian"
-	"github.com/grafana/grafana/pkg/services/star"
 	"github.com/grafana/grafana/pkg/util"
 	"github.com/grafana/grafana/pkg/web"
 )
@@ -34,13 +33,12 @@ func (hs *HTTPServer) isDashboardStarredByUser(c *models.ReqContext, dashID int6
 		return false, nil
 	}
 
-	query := star.IsStarredByUserQuery{UserID: c.UserId, DashboardID: dashID}
-	isStarred, err := hs.dashboardService.DashboardIsStarredByUserCtx(c.Req.Context(), &query)
-	if err != nil {
+	query := models.IsStarredByUserQuery{UserId: c.UserId, DashboardId: dashID}
+	if err := hs.SQLStore.IsStarredByUserCtx(c.Req.Context(), &query); err != nil {
 		return false, err
 	}
 
-	return isStarred, nil
+	return query.Result, nil
 }
 
 func dashboardGuardianResponse(err error) response.Response {

@@ -18,7 +18,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/dashboards"
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/guardian"
-	"github.com/grafana/grafana/pkg/services/star/startest"
+	"github.com/grafana/grafana/pkg/services/sqlstore/mockstore"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/util"
 )
@@ -29,16 +29,15 @@ var user = &models.SignedInUser{UserId: 1}
 func TestProvideFolderService(t *testing.T) {
 	t.Run("should register scope resolvers", func(t *testing.T) {
 		store := &dashboards.FakeDashboardStore{}
-		starFake := startest.NewStarServiceFake()
 		cfg := setting.NewCfg()
 		features := featuremgmt.WithFeatures()
 		permissionsServices := acmock.NewPermissionsServicesMock()
-		dashboardService := ProvideDashboardService(cfg, store, nil, features, permissionsServices, starFake)
+		dashboardService := ProvideDashboardService(cfg, store, nil, features, permissionsServices)
 		ac := acmock.New()
 
 		ProvideFolderService(
 			cfg, &dashboards.FakeDashboardService{DashboardService: dashboardService},
-			store, nil, features, permissionsServices, ac,
+			store, nil, features, permissionsServices, ac, mockstore.NewSQLStoreMock(),
 		)
 
 		require.Len(t, ac.Calls.RegisterAttributeScopeResolver, 2)
@@ -48,7 +47,6 @@ func TestProvideFolderService(t *testing.T) {
 func TestFolderService(t *testing.T) {
 	t.Run("Folder service tests", func(t *testing.T) {
 		store := &dashboards.FakeDashboardStore{}
-		starsFake := startest.NewStarServiceFake()
 		cfg := setting.NewCfg()
 		features := featuremgmt.WithFeatures()
 		permissionsServices := acmock.NewPermissionsServicesMock()

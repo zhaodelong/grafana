@@ -23,7 +23,6 @@ import (
 	"github.com/grafana/grafana/pkg/services/libraryelements"
 	"github.com/grafana/grafana/pkg/services/sqlstore"
 	"github.com/grafana/grafana/pkg/services/sqlstore/mockstore"
-	"github.com/grafana/grafana/pkg/services/star/startest"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -1424,13 +1423,11 @@ func createDashboard(t *testing.T, sqlStore *sqlstore.SQLStore, user *models.Sig
 
 	dashboardStore := database.ProvideDashboardStore(sqlStore)
 	dashAlertService := alerting.ProvideDashAlertExtractorService(nil, nil)
-	starFake := startest.NewStarServiceFake()
 	service := dashboardservice.ProvideDashboardService(
 		setting.NewCfg(), dashboardStore, dashAlertService,
-		featuremgmt.WithFeatures(), acmock.NewPermissionsServicesMock(), starFake,
+		featuremgmt.WithFeatures(), acmock.NewPermissionsServicesMock(),
 	)
 	dashboard, err := service.SaveDashboard(context.Background(), dashItem, true)
-
 	require.NoError(t, err)
 
 	return dashboard
@@ -1444,9 +1441,7 @@ func createFolderWithACL(t *testing.T, sqlStore *sqlstore.SQLStore, title string
 	features := featuremgmt.WithFeatures()
 	permissionsServices := acmock.NewPermissionsServicesMock()
 	dashboardStore := database.ProvideDashboardStore(sqlStore)
-
-	starFake := startest.NewStarServiceFake()
-	d := dashboardservice.ProvideDashboardService(cfg, dashboardStore, nil, features, permissionsServices, starFake)
+	d := dashboardservice.ProvideDashboardService(cfg, dashboardStore, nil, features, permissionsServices)
 	ac := acmock.New()
 	s := dashboardservice.ProvideFolderService(cfg, d, dashboardStore, nil, features, permissionsServices, ac, nil)
 
@@ -1540,13 +1535,12 @@ func testScenario(t *testing.T, desc string, fn func(t *testing.T, sc scenarioCo
 		sqlStore := sqlstore.InitTestDB(t)
 		dashboardStore := database.ProvideDashboardStore(sqlStore)
 
-		starFake := startest.NewStarServiceFake()
 		features := featuremgmt.WithFeatures()
 		permissionsServices := acmock.NewPermissionsServicesMock()
 
 		dashboardService := dashboardservice.ProvideDashboardService(
 			cfg, dashboardStore, &alerting.DashAlertExtractorService{},
-			features, permissionsServices, starFake,
+			features, permissionsServices,
 		)
 		ac := acmock.New()
 

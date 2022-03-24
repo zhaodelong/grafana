@@ -23,7 +23,6 @@ import (
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/util"
 
-	"github.com/grafana/grafana/pkg/services/star/startest"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 )
@@ -44,7 +43,6 @@ func SetupTestEnv(t *testing.T, baseInterval time.Duration) (*ngalert.AlertNG, *
 	sqlStore := sqlstore.InitTestDB(t)
 	secretsService := secretsManager.SetupTestService(t, database.ProvideSecretsStore(sqlStore))
 	dashboardStore := databasestore.ProvideDashboardStore(sqlStore)
-	starFake := startest.NewStarServiceFake()
 
 	ac := acmock.New()
 	features := featuremgmt.WithFeatures()
@@ -52,7 +50,7 @@ func SetupTestEnv(t *testing.T, baseInterval time.Duration) (*ngalert.AlertNG, *
 
 	dashboardService := dashboardservice.ProvideDashboardService(
 		cfg, dashboardStore, nil,
-		features, permissionsServices, starFake,
+		features, permissionsServices,
 	)
 	folderService := dashboardservice.ProvideFolderService(
 		cfg, dashboardService, dashboardStore, nil,

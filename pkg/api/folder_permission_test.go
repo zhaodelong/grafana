@@ -22,7 +22,6 @@ import (
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/services/guardian"
 	"github.com/grafana/grafana/pkg/services/sqlstore/mockstore"
-	"github.com/grafana/grafana/pkg/services/star/startest"
 	"github.com/grafana/grafana/pkg/setting"
 )
 
@@ -33,7 +32,6 @@ func TestFolderPermissionAPIEndpoint(t *testing.T) {
 	defer folderService.AssertExpectations(t)
 
 	dashboardStore := &dashboards.FakeDashboardStore{}
-	starFake := startest.NewStarServiceFake()
 	defer dashboardStore.AssertExpectations(t)
 
 	features := featuremgmt.WithFeatures()
@@ -45,9 +43,10 @@ func TestFolderPermissionAPIEndpoint(t *testing.T) {
 		folderService:      folderService,
 		permissionServices: permissionsServices,
 		dashboardService: service.ProvideDashboardService(
-			settings, dashboardStore, nil, features, permissionsServices, starFake,
+			settings, dashboardStore, nil, features, permissionsServices,
 		),
 	}
+
 	t.Run("Given folder not exists", func(t *testing.T) {
 		folderService.On("GetFolderByUID", mock.Anything, mock.Anything, mock.Anything, mock.Anything).Return(nil, models.ErrFolderNotFound).Twice()
 		mockSQLStore := mockstore.NewSQLStoreMock()
