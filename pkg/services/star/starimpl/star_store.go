@@ -9,10 +9,10 @@ import (
 )
 
 type store interface {
-	isStarredByUser(ctx context.Context, query *star.IsStarredByUserQuery) (bool, error)
-	insert(ctx context.Context, cmd *star.StarDashboardCommand) error
+	get(ctx context.Context, query *star.IsStarredByUserQuery) (bool, error)
+	create(ctx context.Context, cmd *star.StarDashboardCommand) error
 	delete(ctx context.Context, cmd *star.UnstarDashboardCommand) error
-	getUserStars(ctx context.Context, query *star.GetUserStarsQuery) (star.GetUserStarsResult, error)
+	list(ctx context.Context, query *star.GetUserStarsQuery) (star.GetUserStarsResult, error)
 }
 
 type storeImpl struct {
@@ -24,7 +24,7 @@ func newStarStore(sqlstore sqlstore.Store) *storeImpl {
 	return s
 }
 
-func (s *storeImpl) isStarredByUser(ctx context.Context, query *star.IsStarredByUserQuery) (bool, error) {
+func (s *storeImpl) get(ctx context.Context, query *star.IsStarredByUserQuery) (bool, error) {
 	var isStarred bool
 	err := s.sqlStore.WithDbSession(ctx, func(sess *sqlstore.DBSession) error {
 		rawSQL := "SELECT 1 from star where user_id=? and dashboard_id=?"
@@ -45,7 +45,7 @@ func (s *storeImpl) isStarredByUser(ctx context.Context, query *star.IsStarredBy
 	return isStarred, err
 }
 
-func (s *storeImpl) insert(ctx context.Context, cmd *star.StarDashboardCommand) error {
+func (s *storeImpl) create(ctx context.Context, cmd *star.StarDashboardCommand) error {
 	return s.sqlStore.WithTransactionalDbSession(ctx, func(sess *sqlstore.DBSession) error {
 		entity := star.Star{
 			UserID:      cmd.UserID,
@@ -65,7 +65,7 @@ func (s *storeImpl) delete(ctx context.Context, cmd *star.UnstarDashboardCommand
 	})
 }
 
-func (s *storeImpl) getUserStars(ctx context.Context, query *star.GetUserStarsQuery) (star.GetUserStarsResult, error) {
+func (s *storeImpl) list(ctx context.Context, query *star.GetUserStarsQuery) (star.GetUserStarsResult, error) {
 	userStars := make(map[int64]bool)
 	err := s.sqlStore.WithDbSession(ctx, func(dbSession *sqlstore.DBSession) error {
 		var stars = make([]star.Star, 0)

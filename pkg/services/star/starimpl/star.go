@@ -16,14 +16,14 @@ func ProvideService(sqlstore sqlstore.Store) star.Service {
 	return s
 }
 
-func (s *serviceImpl) StarDashboard(ctx context.Context, cmd *star.StarDashboardCommand) error {
+func (s *serviceImpl) Add(ctx context.Context, cmd *star.StarDashboardCommand) error {
 	if err := cmd.Validate(); err != nil {
 		return err
 	}
-	return s.starStore.insert(ctx, cmd)
+	return s.starStore.create(ctx, cmd)
 }
 
-func (s *serviceImpl) UnstarDashboard(ctx context.Context, cmd *star.UnstarDashboardCommand) error {
+func (s *serviceImpl) Delete(ctx context.Context, cmd *star.UnstarDashboardCommand) error {
 	if err := cmd.Validate(); err != nil {
 		return err
 	}
@@ -31,9 +31,9 @@ func (s *serviceImpl) UnstarDashboard(ctx context.Context, cmd *star.UnstarDashb
 }
 
 func (s *serviceImpl) IsStarredByUser(ctx context.Context, query *star.IsStarredByUserQuery) (bool, error) {
-	return s.starStore.isStarredByUser(ctx, query)
+	return s.starStore.get(ctx, query)
 }
 
-func (s *serviceImpl) GetUserStars(ctx context.Context, cmd *star.GetUserStarsQuery) (star.GetUserStarsResult, error) {
-	return s.starStore.getUserStars(ctx, cmd)
+func (s *serviceImpl) GetByUser(ctx context.Context, cmd *star.GetUserStarsQuery) (star.GetUserStarsResult, error) {
+	return s.starStore.list(ctx, cmd)
 }

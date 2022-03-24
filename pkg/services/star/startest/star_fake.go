@@ -20,15 +20,15 @@ func (f *FakeStarService) IsStarredByUser(ctx context.Context, query *star.IsSta
 	return true, f.ExpectedError
 }
 
-func (f *FakeStarService) StarDashboard(ctx context.Context, cmd *star.StarDashboardCommand) error {
+func (f *FakeStarService) Add(ctx context.Context, cmd *star.StarDashboardCommand) error {
 	return f.ExpectedError
 }
 
-func (f *FakeStarService) UnstarDashboard(ctx context.Context, cmd *star.UnstarDashboardCommand) error {
+func (f *FakeStarService) Delete(ctx context.Context, cmd *star.UnstarDashboardCommand) error {
 	return f.ExpectedError
 }
 
-func (f *FakeStarService) GetUserStars(ctx context.Context, query *star.GetUserStarsQuery) (star.GetUserStarsResult, error) {
+func (f *FakeStarService) GetByUser(ctx context.Context, query *star.GetUserStarsQuery) (star.GetUserStarsResult, error) {
 	return f.ExpectedUserStars, f.ExpectedError
 }
 
