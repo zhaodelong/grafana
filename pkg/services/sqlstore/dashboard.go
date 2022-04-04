@@ -2,6 +2,7 @@ package sqlstore
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/prometheus/client_golang/prometheus"
@@ -154,6 +155,7 @@ func (ss *SQLStore) FindDashboards(ctx context.Context, query *models.FindPersis
 		}
 	}
 
+	fmt.Println("response after counting is: >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> ", res)
 	return res, nil
 }
 
@@ -169,10 +171,12 @@ func (ss *SQLStore) SearchDashboards(ctx context.Context, query *models.FindPers
 
 func mergeCounterWithDashboards(dsFound *[]DashboardSearchProjection, cRes models.CountDashboardsResult) {
 	for _, d := range *dsFound {
-		for _, c := range cRes {
-			if c.Folderid == d.FolderID {
-				d.Count = c.Count
-				break
+		if d.IsFolder {
+			for _, c := range cRes {
+				if c.FolderUID == d.UID {
+					d.DsCounter = c.Count
+					break
+				}
 			}
 		}
 	}
