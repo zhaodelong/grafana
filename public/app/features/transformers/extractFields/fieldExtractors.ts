@@ -19,34 +19,87 @@ const extJSON: FieldExtractor = {
   },
 };
 
-// strips quotes and leading/trailing braces in prom labels
-const stripDecor = /['"]|^\{|\}$/g;
-// splits on whitespace and other label pair delimiters
-const splitLines = /[\s,;&]+/g;
-// splits kv pairs
-const splitPair = /[=:]/g;
-
 const extLabels: FieldExtractor = {
   id: FieldExtractorID.KeyValues,
   name: 'Key+value pairs',
   description: 'Look for a=b, c: d values in the line',
-  parse: (v: string) => {
-    const obj: Record<string, any> = {};
-
-    v.trim()
-      .replace(stripDecor, '')
-      .split(splitLines)
-      .forEach((pair) => {
-        let [k, v] = pair.split(splitPair);
-
-        if (k != null) {
-          obj[k] = v;
-        }
-      });
-
-    return obj;
-  },
+  parse: parseKeyValuePairs,
 };
+
+export function parseKeyValuePairs(raw: string): Record<string, string> {
+  const buff: string[] = []; // array of characters
+  let esc = '';
+  let key = '';
+  const obj: Record<string, string> = {};
+  for (let i = 0; i < raw.length; i++) {
+    let c = raw[i];
+    if (c === esc) {
+      esc = '';
+      c = raw[++i];
+    }
+
+    const isEscaped = c === '\\';
+    if (isEscaped) {
+      c = raw[++i];
+    }
+
+    // When escaped just append
+    if (isEscaped || esc.length) {
+      buff.push(c);
+      continue;
+    }
+
+    if (c === `"` || c === `'`) {
+      esc = c;
+    }
+
+    switch (c) {
+      case ':':
+      case '=':
+        if (buff.length) {
+          key = buff.join('');
+          buff.length = 0; // clear values
+        }
+        break;
+
+      // escape chars
+      case `"`:
+      case `'`:
+      // whitespace
+      case ` `:
+      case `\n`:
+      case `\t`:
+      case `\r`:
+      case `\n`:
+      // seperators
+      case ',':
+      case ';':
+      case '&':
+      case '{':
+      case '}':
+        if (buff.length) {
+          const val = buff.join('');
+          if (key.length) {
+            obj[key] = val;
+            key = '';
+          } else {
+            key = val;
+          }
+          buff.length = 0; // clear values
+        }
+        break;
+
+      // append our buffer
+      default:
+        buff.push(c);
+    }
+  }
+
+  if (key.length) {
+    obj[key] = buff.join('');
+  }
+  return obj;
+}
 
 const fmts = [extJSON, extLabels];
 

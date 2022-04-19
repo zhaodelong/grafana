@@ -50,4 +50,55 @@ describe('Extract fields from text', () => {
       }
     `);
   });
+
+  it('Misformed data', async () => {
+    const extractor = fieldExtractors.get(FieldExtractorID.KeyValues);
+    let out = extractor.parse('a="1');
+    expect(out).toMatchInlineSnapshot(`
+      Object {
+        "a": "1",
+      }
+    `);
+
+    out = extractor.parse('a=');
+    expect(out).toMatchInlineSnapshot(`
+      Object {
+        "a": "",
+      }
+    `);
+
+    //????? GOOD OR BAD ??????
+    out = extractor.parse('no key value pairs');
+    expect(out).toMatchInlineSnapshot(`
+      Object {
+        "no": "key",
+        "value": "pairs",
+      }
+    `);
+  });
+
+  it('Test key-values with single/double quotes', async () => {
+    const extractor = fieldExtractors.get(FieldExtractorID.KeyValues);
+    const out = extractor.parse('a="1",   "b"=\'2\',c=3  x:y ;\r\nz="d and 4"');
+    expect(out).toMatchInlineSnapshot(`
+      Object {
+        "a": "1",
+        "b": "2",
+        "c": "3",
+        "x": "y",
+        "z": "d and 4",
+      }
+    `);
+  });
+
+  it('Test key-values with nested single/double quotes', async () => {
+    const extractor = fieldExtractors.get(FieldExtractorID.KeyValues);
+    const out = extractor.parse(`z="dbl_quotes=\\"Double Quotes\\" sgl_quotes='Single Quotes'"`);
+
+    expect(out).toMatchInlineSnapshot(`
+      Object {
+        "z": "dbl_quotes=\\"Double Quotes\\" sgl_quotes='Single Quotes'",
+      }
+    `);
+  });
 });
