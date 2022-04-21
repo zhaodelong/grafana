@@ -149,10 +149,11 @@ func buildDataFrames(startTime time.Time, endTime time.Time, aggregatedResponse 
 				timeField := data.NewField(data.TimeSeriesTimeFieldName, nil, []*time.Time{})
 				valueField := data.NewField(data.TimeSeriesValueFieldName, labels, []*float64{})
 
-				valueField.SetConfig(&data.FieldConfig{DisplayNameFromDS: label, Links: createDataLinks(deepLink)})
+				frameName := legacyNameRules(query, query.Statistic, labels, label)
+				valueField.SetConfig(&data.FieldConfig{DisplayNameFromDS: frameName, Links: createDataLinks(deepLink)})
 
 				emptyFrame := data.Frame{
-					Name: label,
+					Name: frameName,
 					Fields: []*data.Field{
 						timeField,
 						valueField,
@@ -177,10 +178,11 @@ func buildDataFrames(startTime time.Time, endTime time.Time, aggregatedResponse 
 		timeField := data.NewField(data.TimeSeriesTimeFieldName, nil, timestamps)
 		valueField := data.NewField(data.TimeSeriesValueFieldName, labels, points)
 
-		valueField.SetConfig(&data.FieldConfig{DisplayNameFromDS: label, Links: createDataLinks(deepLink)})
+		frameName := legacyNameRules(query, query.Statistic, labels, label)
+		valueField.SetConfig(&data.FieldConfig{DisplayNameFromDS: frameName, Links: createDataLinks(deepLink)})
 
 		frame := data.Frame{
-			Name: label,
+			Name: frameName,
 			Fields: []*data.Field{
 				timeField,
 				valueField,
@@ -215,6 +217,25 @@ func buildDataFrames(startTime time.Time, endTime time.Time, aggregatedResponse 
 	}
 
 	return frames, nil
+}
+
+func legacyNameRules(query *cloudWatchQuery, stat string, dimensions map[string]string, label string) string {
+	if len(query.Alias) == 0 && query.isMathExpression() {
+		return query.Id
+	}
+	if label == "" {
+		return query.MetricName + "_" + stat
+	}
+
+	if len(query.Alias) == 0 && query.isInferredSearchExpression() && !query.isMultiValuedDimensionExpression() {
+		return label
+	}
+
+	if query.Alias == "" && query.MetricQueryType != MetricQueryTypeQuery {
+		return query.MetricName + "_" + stat
+	}
+
+	return label
 }
 
 func createDataLinks(link string) []data.DataLink {
