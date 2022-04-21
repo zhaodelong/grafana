@@ -258,7 +258,7 @@
     "@grafana/ui": "workspace:*",
     "@jaegertracing/jaeger-ui-components": "workspace:*",
     "@kusto/monaco-kusto": "5.1.1",
-    "@lezer/common": "0.15.12",
+    "@lezer/common": "0.16.0",
     "@lezer/lr": "0.15.8",
     "@lingui/core": "3.13.2",
     "@lingui/react": "3.13.2",
