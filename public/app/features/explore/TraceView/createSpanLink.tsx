@@ -1,3 +1,4 @@
+import { SpanLinks } from '@jaegertracing/jaeger-ui-components/src/types/links';
 import React from 'react';
 
 import {
@@ -9,6 +10,7 @@ import {
   dateTime,
   Field,
   KeyValue,
+  LinkModel,
   mapInternalLinkToExplore,
   rangeUtil,
   SplitOpen,
@@ -17,9 +19,10 @@ import {
 import { getTemplateSrv } from '@grafana/runtime';
 import { Icon } from '@grafana/ui';
 import { SpanLinkFunc, TraceSpan } from '@jaegertracing/jaeger-ui-components';
-import { SpanLinks } from '@jaegertracing/jaeger-ui-components/src/types/links';
 import { TraceToLogsOptions } from 'app/core/components/TraceToLogs/TraceToLogsSettings';
+import { TraceToMetricsOptions } from 'app/core/components/TraceToMetrics/TraceToMetricsSettings';
 import { getDatasourceSrv } from 'app/features/plugins/datasource_srv';
+import { PromQuery } from 'app/plugins/datasource/prometheus/types';
 
 import { LokiQuery } from '../../../plugins/datasource/loki/types';
 import { getFieldLinksForExplore } from '../utils/links';
@@ -34,16 +37,18 @@ export function createSpanLinkFactory({
   traceToLogsOptions,
   traceToMetricsOptions,
   dataFrame,
+  createFocusSpanLink,
 }: {
   splitOpenFn: SplitOpen;
   traceToLogsOptions?: TraceToLogsOptions;
-  traceToMetricsOptions?: { datasourceUid?: string };
+  traceToMetricsOptions?: TraceToMetricsOptions;
   dataFrame?: DataFrame;
+  createFocusSpanLink?: (traceId: string, spanId: string) => LinkModel<Field>;
 }): SpanLinkFunc | undefined {
   if (!dataFrame || dataFrame.fields.length === 1 || !dataFrame.fields.some((f) => Boolean(f.config.links?.length))) {
     // if the dataframe contains just a single blob of data (legacy format) or does not have any links configured,
     // let's try to use the old legacy path.
-    return legacyCreateSpanLinkFactory(splitOpenFn, traceToLogsOptions, traceToMetricsOptions);
+    return legacyCreateSpanLinkFactory(splitOpenFn, traceToLogsOptions, traceToMetricsOptions, createFocusSpanLink);
   } else {
     return function SpanLink(span: TraceSpan): SpanLinks | undefined {
       // We should be here only if there are some links in the dataframe
@@ -65,7 +70,6 @@ export function createSpanLinkFactory({
               content: <Icon name="gf-logs" title="Explore the logs for this in split view" />,
             },
           ],
-          count: 1,
         };
       } catch (error) {
         // It's fairly easy to crash here for example if data source defines wrong interpolation in the data link
@@ -79,7 +83,8 @@ export function createSpanLinkFactory({
 function legacyCreateSpanLinkFactory(
   splitOpenFn: SplitOpen,
   traceToLogsOptions?: TraceToLogsOptions,
-  traceToMetricsOptions?: { datasourceUid?: string }
+  traceToMetricsOptions?: TraceToMetricsOptions,
+  createFocusSpanLink?: (traceId: string, spanId: string) => LinkModel<Field>
 ) {
   let logsDataSourceSettings: DataSourceInstanceSettings<DataSourceJsonData> | undefined;
   const isSplunkDS = logsDataSourceSettings?.type === 'grafana-splunk-datasource';
@@ -92,13 +97,8 @@ function legacyCreateSpanLinkFactory(
     metricsDataSourceSettings = getDatasourceSrv().getInstanceSettings(traceToMetricsOptions.datasourceUid);
   }
 
-  // Return if no linked datasources
-  if (!logsDataSourceSettings && !metricsDataSourceSettings) {
-    return undefined;
-  }
-
   return function SpanLink(span: TraceSpan): SpanLinks {
-    const links: SpanLinks = { count: 0 };
+    const links: SpanLinks = { traceLinks: [] };
     // This is reusing existing code from derived fields which may not be ideal match so some data is a bit faked at
     // the moment. Issue is that the trace itself isn't clearly mapped to dataFrame (right now it's just a json blob
     // inside a single field) so the dataLinks as config of that dataFrame abstraction breaks down a bit and we do
@@ -145,13 +145,12 @@ function legacyCreateSpanLinkFactory(
             content: <Icon name="gf-logs" title="Explore the logs for this in split view" />,
           },
         ];
-        links.count++;
       }
     }
 
     // Get metrics links
-    if (metricsDataSourceSettings && traceToMetricsOptions && span.operationName.length % 2 === 0) {
-      const dataLink: DataLink<LokiQuery> = {
+    if (metricsDataSourceSettings && traceToMetricsOptions) {
+      const dataLink: DataLink<PromQuery> = {
         title: metricsDataSourceSettings.name,
         url: '',
         internal: {
@@ -184,7 +183,38 @@ function legacyCreateSpanLinkFactory(
           content: <Icon name="chart-line" title="Explore metrics for this span" />,
         },
       ];
-      links.count++;
+    }
+
+    // Get trace links
+    if (span.references && createFocusSpanLink) {
+      for (const reference of span.references) {
+        // Ignore parent-child links
+        if (reference.refType === 'CHILD_OF') {
+          continue;
+        }
+
+        const link = createFocusSpanLink(reference.traceID, reference.spanID);
+
+        links.traceLinks!.push({
+          href: link.href,
+          title: reference.span ? reference.span.operationName : 'View linked span',
+          content: <Icon name="link" title="View linked span" />,
+          onClick: link.onClick,
+        });
+      }
+    }
+
+    if (span.subsidiarilyReferencedBy && createFocusSpanLink) {
+      for (const reference of span.subsidiarilyReferencedBy) {
+        const link = createFocusSpanLink(reference.traceID, reference.spanID);
+
+        links.traceLinks!.push({
+          href: link.href,
+          title: reference.span ? reference.span.operationName : 'View linked span',
+          content: <Icon name="link" title="View linked span" />,
+          onClick: link.onClick,
+        });
+      }
     }
 
     return links;

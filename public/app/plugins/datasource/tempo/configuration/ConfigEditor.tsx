@@ -27,6 +27,12 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
         <TraceToLogsSettings options={options} onOptionsChange={onOptionsChange} />
       </div>
 
+      {config.featureToggles.traceToMetrics ? (
+        <div className="gf-form-group">
+          <TraceToMetricsSettings options={options} onOptionsChange={onOptionsChange} />
+        </div>
+      ) : null}
+
       {config.featureToggles.tempoServiceGraph && (
         <div className="gf-form-group">
           <ServiceGraphSettings options={options} onOptionsChange={onOptionsChange} />
@@ -46,12 +52,6 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
       <div className="gf-form-group">
         <LokiSearchSettings options={options} onOptionsChange={onOptionsChange} />
       </div>
-
-      {config.featureToggles.traceToMetrics ? (
-        <div className="gf-form-group">
-          <TraceToMetricsSettings options={options} onOptionsChange={onOptionsChange} />
-        </div>
-      ) : null}
     </>
   );
 };

@@ -6,13 +6,13 @@ export type SpanLinkDef = {
   href: string;
   onClick?: (event: any) => void;
   content: React.ReactNode;
+  title?: string;
 };
 
 export type SpanLinks = {
   logLinks?: SpanLinkDef[];
   traceLinks?: SpanLinkDef[];
   metricLinks?: SpanLinkDef[];
-  count: number;
 };
 
 export type SpanLinkFunc = (span: TraceSpan) => SpanLinks | undefined;

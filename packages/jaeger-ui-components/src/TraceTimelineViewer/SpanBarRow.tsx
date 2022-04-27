@@ -17,22 +17,21 @@ import cx from 'classnames';
 import * as React from 'react';
 import IoAlert from 'react-icons/lib/io/alert';
 import IoArrowRightA from 'react-icons/lib/io/arrow-right-a';
-import MdFileUpload from 'react-icons/lib/md/file-upload';
 
 import { GrafanaTheme2 } from '@grafana/data';
-import { Icon, stylesFactory, withTheme2 } from '@grafana/ui';
+import { stylesFactory, withTheme2 } from '@grafana/ui';
 
 import { autoColor } from '../Theme';
 import { SpanLinkFunc, TNil } from '../types';
+import { SpanLinks } from '../types/links';
 import { TraceSpan } from '../types/trace';
 
-import ReferencesButton from './ReferencesButton';
 import SpanBar from './SpanBar';
+import { SpanLinksMenu } from './SpanLinks';
 import SpanTreeOffset from './SpanTreeOffset';
 import Ticks from './Ticks';
 import TimelineRow from './TimelineRow';
 import { formatDuration, ViewedBoundsFunctionType } from './utils';
-import { SpanLinksMenu } from './SpanLinks';
 
 const spanBarClassName = 'spanBar';
 const spanBarLabelClassName = 'spanBarLabel';
@@ -323,7 +322,6 @@ type SpanBarRowProps = {
   getViewedBounds: ViewedBoundsFunctionType;
   traceStartTime: number;
   span: TraceSpan;
-  focusSpan: (spanID: string) => void;
   hoverIndentGuideIds: Set<string>;
   addHoverIndentGuideId: (spanID: string) => void;
   removeHoverIndentGuideId: (spanID: string) => void;
@@ -371,7 +369,6 @@ export class UnthemedSpanBarRow extends React.PureComponent<SpanBarRowProps> {
       getViewedBounds,
       traceStartTime,
       span,
-      focusSpan,
       hoverIndentGuideIds,
       addHoverIndentGuideId,
       removeHoverIndentGuideId,
@@ -402,6 +399,14 @@ export class UnthemedSpanBarRow extends React.PureComponent<SpanBarRowProps> {
       longLabel = `${label} | ${labelDetail}`;
       hintClassName = styles.labelRight;
     }
+
+    const countLinks = (links?: SpanLinks): number => {
+      if (!links) {
+        return 0;
+      }
+
+      return Object.values(links).reduce((count, arr) => count + arr.length, 0);
+    };
 
     return (
       <TimelineRow
@@ -478,7 +483,8 @@ export class UnthemedSpanBarRow extends React.PureComponent<SpanBarRowProps> {
             {createSpanLink &&
               (() => {
                 const links = createSpanLink(span);
-                if (links?.count === 1) {
+                const count = countLinks(links);
+                if (links && count === 1) {
                   const link = links.logLinks?.[0] ?? links.metricLinks?.[0] ?? links.traceLinks?.[0] ?? undefined;
                   if (!link) {
                     return null;
@@ -505,33 +511,12 @@ export class UnthemedSpanBarRow extends React.PureComponent<SpanBarRowProps> {
                       {link.content}
                     </a>
                   );
-                } else if (links && links.count > 1) {
+                } else if (links && count > 1) {
                   return <SpanLinksMenu links={links} />;
                 } else {
                   return null;
                 }
               })()}
-
-            {span.references && span.references.length > 1 && (
-              <ReferencesButton
-                references={span.references}
-                tooltipText="Contains multiple references"
-                focusSpan={focusSpan}
-              >
-                <Icon name="link" />
-              </ReferencesButton>
-            )}
-            {span.subsidiarilyReferencedBy && span.subsidiarilyReferencedBy.length > 0 && (
-              <ReferencesButton
-                references={span.subsidiarilyReferencedBy}
-                tooltipText={`This span is referenced by ${
-                  span.subsidiarilyReferencedBy.length === 1 ? 'another span' : 'multiple other spans'
-                }`}
-                focusSpan={focusSpan}
-              >
-                <MdFileUpload />
-              </ReferencesButton>
-            )}
           </div>
         </TimelineRow.Cell>
         <TimelineRow.Cell

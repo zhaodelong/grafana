@@ -387,7 +387,6 @@ export class UnthemedVirtualizedTraceView extends React.Component<VirtualizedTra
       findMatchesIDs,
       spanNameColumnWidth,
       trace,
-      focusSpan,
       hoverIndentGuideIds,
       addHoverIndentGuideId,
       removeHoverIndentGuideId,
@@ -455,7 +454,6 @@ export class UnthemedVirtualizedTraceView extends React.Component<VirtualizedTra
           getViewedBounds={this.getViewedBounds()}
           traceStartTime={trace.startTime}
           span={span}
-          focusSpan={focusSpan}
           hoverIndentGuideIds={hoverIndentGuideIds}
           addHoverIndentGuideId={addHoverIndentGuideId}
           removeHoverIndentGuideId={removeHoverIndentGuideId}
@@ -487,6 +485,7 @@ export class UnthemedVirtualizedTraceView extends React.Component<VirtualizedTra
       removeHoverIndentGuideId,
       linksGetter,
       theme,
+      createSpanLink,
       focusedSpanId,
       createFocusSpanLink,
       topOfViewRefType,
@@ -519,6 +518,7 @@ export class UnthemedVirtualizedTraceView extends React.Component<VirtualizedTra
           hoverIndentGuideIds={hoverIndentGuideIds}
           addHoverIndentGuideId={addHoverIndentGuideId}
           removeHoverIndentGuideId={removeHoverIndentGuideId}
+          createSpanLink={createSpanLink}
           focusedSpanId={focusedSpanId}
           createFocusSpanLink={createFocusSpanLink}
           topOfViewRefType={topOfViewRefType}

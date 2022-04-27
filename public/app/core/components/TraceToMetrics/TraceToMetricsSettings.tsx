@@ -1,4 +1,6 @@
 import { css } from '@emotion/css';
+import React from 'react';
+
 import {
   DataSourceJsonData,
   DataSourcePluginOptionsEditorProps,
@@ -7,7 +9,6 @@ import {
 } from '@grafana/data';
 import { DataSourcePicker } from '@grafana/runtime';
 import { Button, InlineField, InlineFieldRow, useStyles } from '@grafana/ui';
-import React from 'react';
 
 export interface TraceToMetricsOptions {
   datasourceUid?: string;
@@ -26,14 +27,12 @@ export function TraceToMetricsSettings({ options, onOptionsChange }: Props) {
     <div className={css({ width: '100%' })}>
       <h3 className="page-heading">Trace to metrics</h3>
 
-      <div className={styles.infoText}>Trace to metrics lets you link trace spans to Prometheus queries.</div>
+      <div className={styles.infoText}>
+        Trace to metrics lets you navigate from a trace span to the selected data source.
+      </div>
 
       <InlineFieldRow className={styles.row}>
-        <InlineField
-          tooltip="The Prometheus data source the trace is going to query"
-          label="Data source"
-          labelWidth={26}
-        >
+        <InlineField tooltip="The data source the trace is going to navigate to" label="Data source" labelWidth={26}>
           <DataSourcePicker
             inputId="trace-to-metrics-data-source-picker"
             pluginId="prometheus"

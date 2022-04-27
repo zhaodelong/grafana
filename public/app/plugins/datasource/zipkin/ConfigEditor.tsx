@@ -23,15 +23,15 @@ export const ConfigEditor: React.FC<Props> = ({ options, onOptionsChange }) => {
         <TraceToLogsSettings options={options} onOptionsChange={onOptionsChange} />
       </div>
 
-      <div className="gf-form-group">
-        <NodeGraphSettings options={options} onOptionsChange={onOptionsChange} />
-      </div>
-
       {config.featureToggles.traceToMetrics ? (
         <div className="gf-form-group">
           <TraceToMetricsSettings options={options} onOptionsChange={onOptionsChange} />
         </div>
       ) : null}
+
+      <div className="gf-form-group">
+        <NodeGraphSettings options={options} onOptionsChange={onOptionsChange} />
+      </div>
     </>
   );
 };

@@ -232,16 +232,6 @@ var (
 			State:       FeatureStateAlpha,
 		},
 		{
-			Name:        "cloudWatchDynamicLabels",
-			Description: "Use dynamic labels instead of alias patterns in CloudWatch datasource",
-			State:       FeatureStateStable,
-		},
-		{
-			Name:        "datasourceQueryMultiStatus",
-			Description: "Introduce HTTP 207 Multi Status for api/ds/query",
-			State:       FeatureStateAlpha,
-		},
-		{
 			Name:         "traceToMetrics",
 			Description:  "Enable trace to metrics links",
 			State:        FeatureStateAlpha,
