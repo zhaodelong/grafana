@@ -6,15 +6,6 @@ import (
 	apiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
-type DatasourceInfo struct {
-	ID           int64
-	URL          string
-	TimeInterval string
-	Buffered     *Buffered
-
-	GetClient clientGetter
-}
-
 type clientGetter func(map[string]string) (apiv1.API, error)
 
 type PrometheusQuery struct {
