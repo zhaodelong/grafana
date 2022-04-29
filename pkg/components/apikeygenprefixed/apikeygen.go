@@ -20,20 +20,29 @@ type PrefixedKey struct {
 	Checksum  string
 }
 
+func (p *PrefixedKey) IsValid(hashedKey string) (bool, error) {
+	if err := bcrypt.CompareHashAndPassword([]byte(hashedKey), []byte(p.Secret)); err != nil {
+		return false, err
+	}
+
+	return true, nil
+}
+
 func (p *PrefixedKey) String() string {
 	return grafanaPrefix + p.ServiceID + "_" + p.Secret + "_" + p.Checksum
 }
 
-// encodePassword encodes a password using PBKDF2.
+// encodePassword encodes a password using bcrypt.
 func encodeAPIKey(password string) (string, error) {
 	key, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", nil
 	}
+
 	return string(key), nil
 }
 
-func New(serviceID, name string) (KeyGenResult, error) {
+func New(serviceID string) (KeyGenResult, error) {
 	result := KeyGenResult{}
 
 	secret, err := util.GetRandomString(32)
@@ -49,6 +58,7 @@ func New(serviceID, name string) (KeyGenResult, error) {
 	}
 
 	result.ClientSecret = key.String()
+
 	return result, nil
 }
 
@@ -64,15 +74,8 @@ func Decode(keyString string) (*PrefixedKey, error) {
 	}
 
 	key.ServiceID = strings.TrimPrefix(parts[0], "gl")
-	key.Secret = parts[]
+	key.Secret = parts[1]
+	key.Checksum = parts[2]
 
 	return key, nil
 }
-
-// func IsValid(key *ApiKeyJson, hashedKey string) (bool, error) {
-// 	check, err := util.EncodePassword(key.Key, key.Name)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	return check == hashedKey, nil
-// }

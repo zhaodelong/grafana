@@ -5,12 +5,27 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	"github.com/grafana/grafana/pkg/util"
 )
 
+func TestApiKeyValidation(t *testing.T) {
+	result := KeyGenResult{
+		ClientSecret: "glsa_fDIcPQ79NxLZXvjubEi2P2il3TNIZqkW_00aw2e",
+		HashedKey:    "$2a$10$ZL2EAPyGQu7Aqzv9LWDPZ.miTbcY5CtH8w5WDSEn1042HdLpn4Mze",
+	}
+
+	keyInfo, err := Decode(result.ClientSecret)
+	require.NoError(t, err)
+	require.Equal(t, "sa", keyInfo.ServiceID)
+	require.Equal(t, "fDIcPQ79NxLZXvjubEi2P2il3TNIZqkW", keyInfo.Secret)
+	require.Equal(t, "00aw2e", keyInfo.Checksum)
+
+	valid, err := keyInfo.IsValid(result.HashedKey)
+	require.NoError(t, err)
+	require.True(t, valid)
+}
+
 func TestApiKeyGen(t *testing.T) {
-	result, err := New(12, "Cool key")
+	result, err := New("sa")
 	require.NoError(t, err)
 
 	assert.NotEmpty(t, result.ClientSecret)
@@ -19,7 +34,7 @@ func TestApiKeyGen(t *testing.T) {
 	keyInfo, err := Decode(result.ClientSecret)
 	require.NoError(t, err)
 
-	keyHashed, err := util.EncodePassword(keyInfo.Key, keyInfo.Name)
+	valid, err := keyInfo.IsValid(result.HashedKey)
 	require.NoError(t, err)
-	assert.Equal(t, result.HashedKey, keyHashed)
+	require.True(t, valid)
 }
