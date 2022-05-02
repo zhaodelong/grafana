@@ -103,7 +103,7 @@ func (s *Streaming) ExecuteTimeSeriesQuery(ctx context.Context, req *backend.Que
 func (s *Streaming) runQuery(ctx context.Context, client *client.Client, q *query.Query) (*backend.DataResponse, error) {
 	s.log.Debug("Sending query", "start", q.Start, "end", q.End, "step", q.Step, "query", q.Expr)
 
-	traceCtx, span := trace(ctx, s.tracer, q)
+	traceCtx, span := s.trace(ctx, q)
 	defer span.End()
 
 	res, err := client.Query(traceCtx, q)
@@ -111,7 +111,6 @@ func (s *Streaming) runQuery(ctx context.Context, client *client.Client, q *quer
 		if !q.ExemplarQuery {
 			return nil, err
 		}
-
 		// If exemplar query returns error, we want to only log it and continue with other results processing
 		s.log.Error("Exemplar query failed", "query", q.Expr, "err", err)
 	}
@@ -127,8 +126,8 @@ func (s *Streaming) runQuery(ctx context.Context, client *client.Client, q *quer
 	return r, nil
 }
 
-func trace(ctx context.Context, tracer tracing.Tracer, q *query.Query) (context.Context, tracing.Span) {
-	traceCtx, span := tracer.Start(ctx, "datasource.prometheus")
+func (s *Streaming) trace(ctx context.Context, q *query.Query) (context.Context, tracing.Span) {
+	traceCtx, span := s.tracer.Start(ctx, "datasource.prometheus")
 	span.SetAttributes("expr", q.Expr, attribute.Key("expr").String(q.Expr))
 	span.SetAttributes("start_unixnano", q.Start, attribute.Key("start_unixnano").Int64(q.Start.UnixNano()))
 	span.SetAttributes("stop_unixnano", q.End, attribute.Key("stop_unixnano").Int64(q.End.UnixNano()))

@@ -26,6 +26,15 @@ type Model struct {
 	UtcOffsetSec   int64  `json:"utcOffsetSec"`
 }
 
+type QueryType int
+
+const (
+	UnknownQueryType QueryType = iota
+	RangeQuery
+	InstantQuery
+	ExemplarQuery
+)
+
 type TimeRange struct {
 	Start time.Time
 	End   time.Time
@@ -84,6 +93,16 @@ func Parse(query backend.DataQuery, timeInterval string, intervalCalculator inte
 		ExemplarQuery: exemplarQuery,
 		UtcOffsetSec:  model.UtcOffsetSec,
 	}, nil
+}
+func (query *Query) Type() QueryType {
+	if query.InstantQuery {
+		return InstantQuery
+	} else if query.RangeQuery {
+		return RangeQuery
+	} else if query.ExemplarQuery {
+		return ExemplarQuery
+	}
+	return UnknownQueryType
 }
 
 func (query *Query) TimeRange() TimeRange {

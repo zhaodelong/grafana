@@ -29,18 +29,14 @@ func NewClient(d doer, method, baseUrl string) *Client {
 }
 
 func (c *Client) Query(ctx context.Context, q *query.Query) (*http.Response, error) {
-	if q.RangeQuery {
+	switch q.Type() {
+	case query.RangeQuery:
 		return c.QueryRange(ctx, q)
-	}
-
-	if q.InstantQuery {
+	case query.InstantQuery:
 		return c.QueryInstant(ctx, q)
-	}
-
-	if q.ExemplarQuery {
+	case query.ExemplarQuery:
 		return c.QueryExemplars(ctx, q)
 	}
-
 	return nil, fmt.Errorf("unsupported query type for query: %s", q.Expr)
 }
 
