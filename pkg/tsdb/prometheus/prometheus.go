@@ -15,6 +15,7 @@ import (
 	"github.com/grafana/grafana/pkg/services/featuremgmt"
 	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/tsdb/prometheus/buffered"
+	"github.com/grafana/grafana/pkg/tsdb/prometheus/streaming"
 	apiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 )
 
@@ -25,7 +26,8 @@ type Service struct {
 }
 
 type instance struct {
-	Buffered *buffered.Buffered
+	Buffered  *buffered.Buffered
+	Streaming *streaming.Streaming
 }
 
 func ProvideService(httpClientProvider httpclient.Provider, cfg *setting.Cfg, features featuremgmt.FeatureToggles, tracer tracing.Tracer) *Service {
@@ -48,11 +50,15 @@ func newInstanceSettings(httpClientProvider httpclient.Provider, cfg *setting.Cf
 			return nil, err
 		}
 
-		mdl := buffered.DatasourceInfo{
-			Buffered: buf,
+		streaming, err := streaming.New(httpClientProvider, cfg, features, tracer, settings, plog)
+		if err != nil {
+			return nil, err
 		}
 
-		return mdl, nil
+		return instance{
+			Buffered:  buf,
+			Streaming: streaming,
+		}, nil
 	}
 }
 
