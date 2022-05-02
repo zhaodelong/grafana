@@ -2,9 +2,11 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"net/http"
 	"net/url"
+	"path"
 	"strconv"
 	"strings"
 	"time"
@@ -26,13 +28,29 @@ func NewClient(d doer, method, baseUrl string) *Client {
 	return &Client{doer: d, method: method, baseUrl: baseUrl}
 }
 
+func (c *Client) Query(ctx context.Context, q *query.Query) (*http.Response, error) {
+	if q.RangeQuery {
+		return c.QueryRange(ctx, q)
+	}
+
+	if q.InstantQuery {
+		return c.QueryInstant(ctx, q)
+	}
+
+	if q.ExemplarQuery {
+		return c.QueryExemplars(ctx, q)
+	}
+
+	return nil, fmt.Errorf("unsupported query type for query: %s", q.Expr)
+}
+
 func (c *Client) QueryRange(ctx context.Context, q *query.Query) (*http.Response, error) {
 	u, err := url.ParseRequestURI(c.baseUrl)
 	if err != nil {
 		return nil, err
 	}
 
-	u.Path = "/api/v1/query_range"
+	u.Path = path.Join(u.Path, "api/v1/query_range")
 
 	qs := u.Query()
 	qs.Set("query", q.Expr)
@@ -45,12 +63,13 @@ func (c *Client) QueryRange(ctx context.Context, q *query.Query) (*http.Response
 	return c.fetch(ctx, u, qs)
 }
 
-func (c *Client) Query(ctx context.Context, q *query.Query) (*http.Response, error) {
+func (c *Client) QueryInstant(ctx context.Context, q *query.Query) (*http.Response, error) {
 	u, err := url.ParseRequestURI(c.baseUrl)
 	if err != nil {
 		return nil, err
 	}
-	u.Path = "/api/v1/query"
+
+	u.Path = path.Join(u.Path, "api/v1/query")
 
 	qs := u.Query()
 	qs.Set("query", q.Expr)
@@ -58,6 +77,23 @@ func (c *Client) Query(ctx context.Context, q *query.Query) (*http.Response, err
 	if !tr.End.IsZero() {
 		qs.Set("time", formatTime(tr.End))
 	}
+
+	return c.fetch(ctx, u, qs)
+}
+
+func (c *Client) QueryExemplars(ctx context.Context, q *query.Query) (*http.Response, error) {
+	u, err := url.ParseRequestURI(c.baseUrl)
+	if err != nil {
+		return nil, err
+	}
+
+	u.Path = path.Join(u.Path, "api/v1/query_exemplars")
+
+	qs := u.Query()
+	tr := q.TimeRange()
+	qs.Set("query", q.Expr)
+	qs.Set("start", formatTime(tr.Start))
+	qs.Set("end", formatTime(tr.End))
 
 	return c.fetch(ctx, u, qs)
 }

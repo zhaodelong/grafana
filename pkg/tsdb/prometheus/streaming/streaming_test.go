@@ -2,11 +2,15 @@ package streaming_test
 
 import (
 	"math"
+	"net/http"
 	"testing"
 	"time"
 
+	sdkhttpclient "github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
+	"github.com/grafana/grafana/pkg/infra/httpclient"
 	"github.com/grafana/grafana/pkg/tsdb/prometheus/query"
+	"github.com/grafana/grafana/pkg/tsdb/prometheus/streaming/client"
 	apiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	p "github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
@@ -258,4 +262,38 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 
 func parseTimeSeriesResponse(value map[query.TimeSeriesQueryType]interface{}, query *query.Query) (data.Frames, error) {
 	panic("unimplemented")
+}
+
+type testContext struct {
+	httpProvider   *fakeHttpClientProvider
+	clientProvider *client.Provider
+}
+
+type fakeHttpClientProvider struct {
+	httpclient.Provider
+
+	opts sdkhttpclient.Options
+}
+
+func (p *fakeHttpClientProvider) New(opts ...sdkhttpclient.Options) (*http.Client, error) {
+	p.opts = opts[0]
+	return sdkhttpclient.New(opts[0])
+}
+
+func (p *fakeHttpClientProvider) GetTransport(opts ...sdkhttpclient.Options) (http.RoundTripper, error) {
+	p.opts = opts[0]
+	return http.DefaultTransport, nil
+}
+
+func (p *fakeHttpClientProvider) middlewares() []string {
+	var middlewareNames []string
+	for _, m := range p.opts.Middlewares {
+		mw, ok := m.(sdkhttpclient.MiddlewareName)
+		if !ok {
+			panic("unexpected middleware type")
+		}
+
+		middlewareNames = append(middlewareNames, mw.MiddlewareName())
+	}
+	return middlewareNames
 }

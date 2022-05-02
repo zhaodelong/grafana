@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
@@ -63,6 +62,7 @@ func New(
 	if err != nil {
 		return nil, err
 	}
+
 	return &Streaming{
 		intervalCalculator: intervalv2.NewCalculator(),
 		tracer:             tracer,
@@ -75,6 +75,7 @@ func New(
 }
 
 func (s *Streaming) ExecuteTimeSeriesQuery(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
+	fromAlert := req.Headers["FromAlert"] == "true"
 	result := backend.QueryDataResponse{
 		Responses: backend.Responses{},
 	}
@@ -85,7 +86,6 @@ func (s *Streaming) ExecuteTimeSeriesQuery(ctx context.Context, req *backend.Que
 	}
 
 	for _, q := range req.Queries {
-		fromAlert := req.Headers["FromAlert"] == "true"
 		query, err := query.Parse(q, s.TimeInterval, s.intervalCalculator, fromAlert)
 		if err != nil {
 			return nil, err
@@ -103,32 +103,17 @@ func (s *Streaming) ExecuteTimeSeriesQuery(ctx context.Context, req *backend.Que
 func (s *Streaming) runQuery(ctx context.Context, client *client.Client, q *query.Query) (*backend.DataResponse, error) {
 	s.log.Debug("Sending query", "start", q.Start, "end", q.End, "step", q.Step, "query", q.Expr)
 
-	traceCtx, span := s.tracer.Start(ctx, "datasource.prometheus")
-	span.SetAttributes("expr", q.Expr, attribute.Key("expr").String(q.Expr))
-	span.SetAttributes("start_unixnano", q.Start, attribute.Key("start_unixnano").Int64(q.Start.UnixNano()))
-	span.SetAttributes("stop_unixnano", q.End, attribute.Key("stop_unixnano").Int64(q.End.UnixNano()))
+	traceCtx, span := trace(ctx, s.tracer, q)
 	defer span.End()
 
-	var (
-		res *http.Response
-		err error
-	)
-
-	if q.RangeQuery {
-		if res, err = client.QueryRange(traceCtx, q); err != nil {
+	res, err := client.Query(traceCtx, q)
+	if err != nil {
+		if !q.ExemplarQuery {
 			return nil, err
 		}
-	}
 
-	if q.InstantQuery {
-		if res, err = client.Query(traceCtx, q); err != nil {
-			return nil, err
-		}
-	}
-
-	// This is a special case
-	// If exemplar query returns error, we want to only log it and continue with other results processing
-	if q.ExemplarQuery {
+		// If exemplar query returns error, we want to only log it and continue with other results processing
+		s.log.Error("Exemplar query failed", "query", q.Expr, "err", err)
 	}
 
 	iter := jsoniter.Parse(jsoniter.ConfigDefault, res.Body, 1024)
@@ -140,4 +125,12 @@ func (s *Streaming) runQuery(ctx context.Context, client *client.Client, q *quer
 	}
 
 	return r, nil
+}
+
+func trace(ctx context.Context, tracer tracing.Tracer, q *query.Query) (context.Context, tracing.Span) {
+	traceCtx, span := tracer.Start(ctx, "datasource.prometheus")
+	span.SetAttributes("expr", q.Expr, attribute.Key("expr").String(q.Expr))
+	span.SetAttributes("start_unixnano", q.Start, attribute.Key("start_unixnano").Int64(q.Start.UnixNano()))
+	span.SetAttributes("stop_unixnano", q.End, attribute.Key("stop_unixnano").Int64(q.End.UnixNano()))
+	return traceCtx, span
 }
