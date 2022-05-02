@@ -88,11 +88,15 @@ func (s *Streaming) ExecuteTimeSeriesQuery(ctx context.Context, req *backend.Que
 	for _, q := range req.Queries {
 		query, err := query.Parse(q, s.TimeInterval, s.intervalCalculator, fromAlert)
 		if err != nil {
-			return nil, err
+			return &result, err
 		}
 		r, err := s.runQuery(ctx, client, query)
 		if err != nil {
 			return &result, err
+		}
+		if r == nil {
+			s.log.Debug("Received nilresponse from runQuery", "query", query.Expr)
+			continue
 		}
 		result.Responses[q.RefID] = *r
 	}
@@ -131,5 +135,6 @@ func (s *Streaming) trace(ctx context.Context, q *query.Query) (context.Context,
 	span.SetAttributes("expr", q.Expr, attribute.Key("expr").String(q.Expr))
 	span.SetAttributes("start_unixnano", q.Start, attribute.Key("start_unixnano").Int64(q.Start.UnixNano()))
 	span.SetAttributes("stop_unixnano", q.End, attribute.Key("stop_unixnano").Int64(q.End.UnixNano()))
+	span.SetAttributes("query_type", q.Type(), attribute.Key("query_type").String(q.Type().String()))
 	return traceCtx, span
 }

@@ -28,6 +28,19 @@ type Model struct {
 
 type QueryType int
 
+func (qt QueryType) String() string {
+	switch qt {
+	case InstantQuery:
+		return "Instant"
+	case RangeQuery:
+		return "Range"
+	case ExemplarQuery:
+		return "Exemplar"
+	default:
+		return "Unknown"
+	}
+}
+
 const (
 	UnknownQueryType QueryType = iota
 	RangeQuery
