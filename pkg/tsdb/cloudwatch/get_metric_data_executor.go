@@ -2,6 +2,7 @@ package cloudwatch
 
 import (
 	"context"
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -11,6 +12,13 @@ import (
 
 func (e *cloudWatchExecutor) executeRequest(ctx context.Context, client cloudwatchiface.CloudWatchAPI,
 	metricDataInput *cloudwatch.GetMetricDataInput) ([]*cloudwatch.GetMetricDataOutput, error) {
+
+	for _, v := range metricDataInput.MetricDataQueries {
+		v.Label = nil
+	}
+
+	backend.Logger.Info("metric data input", metricDataInput)
+
 	mdo := make([]*cloudwatch.GetMetricDataOutput, 0)
 
 	nextToken := ""
@@ -32,5 +40,6 @@ func (e *cloudWatchExecutor) executeRequest(ctx context.Context, client cloudwat
 		nextToken = *resp.NextToken
 	}
 
+	backend.Logger.Info("metric data output", mdo)
 	return mdo, nil
 }
