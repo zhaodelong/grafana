@@ -1,7 +1,7 @@
 +++
-title = "Scripted dashboards"
+aliases = ["/docs/grafana/latest/reference/scripting/", "/docs/grafana/latest/dashboards/scripted-dashboards"]
 keywords = ["grafana", "dashboard", "documentation", "scripted"]
-aliases = ["/docs/grafana/latest/reference/scripting/"]
+title = "Scripted dashboards"
 weight = 1500
 +++
 

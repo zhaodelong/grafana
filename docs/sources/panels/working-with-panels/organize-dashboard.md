@@ -1,6 +1,6 @@
 +++
+aliases = ["/docs/sources/panels/working-with-panels/organize-dashboard/", "/docs/grafana/latest/panels/working-with-panels/organize-dashboard"]
 title = "Organize a dashboard"
-aliases = ["/docs/sources/panels/working-with-panels/organize-dashboard/"]
 weight = 80
 +++
 

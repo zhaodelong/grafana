@@ -1,6 +1,6 @@
 +++
+aliases = ["/docs/sources/panels/reference-query-options/", "/docs/grafana/latest/panels/reference-query-options", "/docs/grafana/latest/panels/query-options"]
 title = "Query options"
-aliases = ["/docs/sources/panels/reference-query-options/", "/docs/grafana/latest/panels/reference-query-options"]
 weight = 900
 +++
 

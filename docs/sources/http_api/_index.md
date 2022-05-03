@@ -1,8 +1,8 @@
 +++
-title = "HTTP API"
+aliases = ["/docs/grafana/latest/overview", "/docs/grafana/latest/http_api"]
 description = "Grafana HTTP API"
 keywords = ["grafana", "http", "documentation", "api", "overview"]
-aliases = ["/docs/grafana/latest/overview"]
+title = "HTTP API"
 weight = 170
 +++
 

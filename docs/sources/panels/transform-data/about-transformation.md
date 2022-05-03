@@ -1,7 +1,7 @@
 +++
+aliases = ["/docs/sources/panels/transform-data/about-transformation/", "/docs/grafana/latest/panels/transform-data/about-transformation"]
 title = "About transformations"
 weight = 10
-aliases = ["/docs/sources/panels/transform-data/about-transformation/"]
 +++
 
 # About transformations

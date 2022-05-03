@@ -1,6 +1,6 @@
 +++
+aliases = ["/docs/grafana/latest/plugins/installation/", "/docs/grafana/latest/plugins/installation"]
 title = "Install plugins"
-aliases = ["/docs/grafana/latest/plugins/installation/"]
 weight = 1
 +++
 

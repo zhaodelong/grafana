@@ -1,7 +1,7 @@
 +++
-title = "Data links"
+aliases = ["/docs/grafana/latest/reference/datalinks/", "/docs/grafana/latest/linking/data-links"]
 keywords = ["grafana", "data links", "documentation", "playlist"]
-aliases = ["/docs/grafana/latest/reference/datalinks/"]
+title = "Data links"
 +++
 
 # Data links

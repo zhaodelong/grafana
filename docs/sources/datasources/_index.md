@@ -1,6 +1,6 @@
 +++
+aliases = ["/docs/grafana/latest/datasources/overview/", "/docs/grafana/latest/datasources"]
 title = "Data sources"
-aliases = ["/docs/grafana/latest/datasources/overview/"]
 weight = 60
 +++
 

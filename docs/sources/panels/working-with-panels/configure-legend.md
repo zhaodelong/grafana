@@ -1,6 +1,6 @@
 +++
+aliases = ["/docs/sources/panels/working-with-panels/configure-legend/", "/docs/grafana/latest/panels/working-with-panels/configure-legend"]
 title = "Configure a legend"
-aliases = ["/docs/sources/panels/working-with-panels/configure-legend/"]
 weight = 70
 +++
 

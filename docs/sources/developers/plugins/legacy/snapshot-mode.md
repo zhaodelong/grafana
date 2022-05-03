@@ -1,6 +1,6 @@
 +++
+aliases = ["/docs/grafana/latest/plugins/developing/snapshot-mode/", "/docs/grafana/latest/developers/plugins/legacy/snapshot-mode"]
 title = "Legacy snapshot mode"
-aliases = ["/docs/grafana/latest/plugins/developing/snapshot-mode/"]
 +++
 
 # Legacy snapshot mode
