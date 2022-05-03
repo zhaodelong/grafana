@@ -108,6 +108,7 @@ type libraryElement struct {
 	ID          int64                  `json:"id"`
 	OrgID       int64                  `json:"orgId"`
 	FolderID    int64                  `json:"folderId"`
+	FolderUID   *string                `json:"folderUID"`
 	UID         string                 `json:"uid"`
 	Name        string                 `json:"name"`
 	Kind        int64                  `json:"kind"`

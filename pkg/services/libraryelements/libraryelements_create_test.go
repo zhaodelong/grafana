@@ -180,4 +180,53 @@ func TestCreateLibraryElement(t *testing.T) {
 				t.Fatalf("Result mismatch (-want +got):\n%s", diff)
 			}
 		})
+
+	testScenario(t, "When an admin tries to create a library panel with folderUID, it should succeed",
+		func(t *testing.T, sc scenarioContext) {
+			folderUID := "ScenarioFolder"
+			command := getCreatePanelCommand(1, "Library Panel Name")
+			command.FolderUID = &folderUID
+
+			sc.reqContext.Req.Body = mockRequestBody(command)
+			resp := sc.service.createHandler(sc.reqContext)
+			var result = validateAndUnMarshalResponse(t, resp)
+			var expected = libraryElementResult{
+				Result: libraryElement{
+					ID:          1,
+					OrgID:       1,
+					FolderUID:   &folderUID,
+					UID:         result.Result.UID,
+					Name:        "Library Panel Name",
+					Kind:        int64(models.PanelElement),
+					Type:        "text",
+					Description: "A description",
+					Model: map[string]interface{}{
+						"datasource":  "${DS_GDEV-TESTDATA}",
+						"description": "A description",
+						"id":          float64(1),
+						"title":       "Text - Library Panel",
+						"type":        "text",
+					},
+					Version: 1,
+					Meta: LibraryElementDTOMeta{
+						ConnectedDashboards: 0,
+						Created:             result.Result.Meta.Created,
+						Updated:             result.Result.Meta.Updated,
+						CreatedBy: LibraryElementDTOMetaUser{
+							ID:        1,
+							Name:      "signed_in_user",
+							AvatarURL: "/avatar/37524e1eb8b3e32850b57db0a19af93b",
+						},
+						UpdatedBy: LibraryElementDTOMetaUser{
+							ID:        1,
+							Name:      "signed_in_user",
+							AvatarURL: "/avatar/37524e1eb8b3e32850b57db0a19af93b",
+						},
+					},
+				},
+			}
+			if diff := cmp.Diff(expected, result, getCompareOptions()...); diff != "" {
+				t.Fatalf("Result mismatch (-want +got):\n%s", diff)
+			}
+		})
 }
