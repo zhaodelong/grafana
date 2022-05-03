@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -26,18 +25,6 @@ type Client struct {
 
 func NewClient(d doer, method, baseUrl string) *Client {
 	return &Client{doer: d, method: method, baseUrl: baseUrl}
-}
-
-func (c *Client) Query(ctx context.Context, q *query.Query) (*http.Response, error) {
-	switch q.Type() {
-	case query.RangeQuery:
-		return c.QueryRange(ctx, q)
-	case query.InstantQuery:
-		return c.QueryInstant(ctx, q)
-	case query.ExemplarQuery:
-		return c.QueryExemplars(ctx, q)
-	}
-	return nil, fmt.Errorf("unsupported query type for query: %s", q.Expr)
 }
 
 func (c *Client) QueryRange(ctx context.Context, q *query.Query) (*http.Response, error) {

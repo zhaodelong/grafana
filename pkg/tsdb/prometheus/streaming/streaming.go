@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana/pkg/infra/httpclient"
 	"github.com/grafana/grafana/pkg/infra/log"
 	"github.com/grafana/grafana/pkg/infra/tracing"
@@ -58,16 +60,16 @@ func New(
 	}
 
 	p := client.NewProvider(settings, jsonData, httpClientProvider, cfg, features, plog)
-	pc, err := client.NewProviderCache(p)
-	if err != nil {
-		return nil, err
-	}
+	//pc, err := client.NewProviderCache(p)
+	//if err != nil {
+	//	return nil, err
+	//}
 
 	return &Streaming{
 		intervalCalculator: intervalv2.NewCalculator(),
 		tracer:             tracer,
 		log:                plog,
-		getClient:          pc.GetClient,
+		getClient:          p.GetClient,
 		TimeInterval:       timeInterval,
 		ID:                 settings.ID,
 		URL:                settings.URL,
@@ -110,17 +112,40 @@ func (s *Streaming) runQuery(ctx context.Context, client *client.Client, q *quer
 	traceCtx, span := s.trace(ctx, q)
 	defer span.End()
 
-	res, err := client.Query(traceCtx, q)
-	if err != nil {
-		if !q.ExemplarQuery {
+	var (
+		err error
+		res *http.Response
+	)
+
+	if q.RangeQuery {
+		res, err = client.QueryRange(traceCtx, q)
+		if err != nil {
 			return nil, err
 		}
-		// If exemplar query returns error, we want to only log it and continue with other results processing
-		s.log.Error("Exemplar query failed", "query", q.Expr, "err", err)
+	}
+
+	if q.InstantQuery {
+		res, err = client.QueryInstant(traceCtx, q)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if q.ExemplarQuery {
+		if res, err = client.QueryExemplars(traceCtx, q); err != nil {
+			// If exemplar query returns error, we want to only log it and
+			// continue with other results processing
+			s.log.Error("Exemplar query failed", "query", q.Expr, "err", err)
+			return &backend.DataResponse{Frames: data.Frames{}}, nil
+		}
 	}
 
 	iter := jsoniter.Parse(jsoniter.ConfigDefault, res.Body, 1024)
 	r := converter.ReadPrometheusStyleResult(iter)
+
+	if r == nil {
+		return nil, fmt.Errorf("received empty response from prometheus")
+	}
 
 	// The ExecutedQueryString can be viewed in QueryInspector in UI
 	for _, frame := range r.Frames {
@@ -135,6 +160,5 @@ func (s *Streaming) trace(ctx context.Context, q *query.Query) (context.Context,
 	span.SetAttributes("expr", q.Expr, attribute.Key("expr").String(q.Expr))
 	span.SetAttributes("start_unixnano", q.Start, attribute.Key("start_unixnano").Int64(q.Start.UnixNano()))
 	span.SetAttributes("stop_unixnano", q.End, attribute.Key("stop_unixnano").Int64(q.End.UnixNano()))
-	span.SetAttributes("query_type", q.Type(), attribute.Key("query_type").String(q.Type().String()))
 	return traceCtx, span
 }

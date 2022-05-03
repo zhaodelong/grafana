@@ -1,16 +1,24 @@
 package streaming_test
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"testing"
 	"time"
 
+	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	sdkhttpclient "github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 	"github.com/grafana/grafana/pkg/infra/httpclient"
+	"github.com/grafana/grafana/pkg/infra/log"
+	"github.com/grafana/grafana/pkg/infra/tracing"
+	"github.com/grafana/grafana/pkg/setting"
 	"github.com/grafana/grafana/pkg/tsdb/prometheus/query"
-	"github.com/grafana/grafana/pkg/tsdb/prometheus/streaming/client"
+	"github.com/grafana/grafana/pkg/tsdb/prometheus/streaming"
 	apiv1 "github.com/prometheus/client_golang/api/prometheus/v1"
 	p "github.com/prometheus/common/model"
 	"github.com/stretchr/testify/require"
@@ -20,7 +28,6 @@ var now = time.Now()
 
 func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 	t.Run("exemplars response should be sampled and parsed normally", func(t *testing.T) {
-		value := make(map[query.TimeSeriesQueryType]interface{})
 		exemplars := []apiv1.ExemplarQueryResult{
 			{
 				SeriesLabels: p.LabelSet{
@@ -53,11 +60,20 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 			},
 		}
 
-		value[query.ExemplarQueryType] = exemplars
-		query := &query.Query{
-			LegendFormat: "legend {{app}}",
+		tctx := setup()
+
+		qm := query.Model{
+			LegendFormat:  "legend {{app}}",
+			UtcOffsetSec:  0,
+			ExemplarQuery: true,
 		}
-		res, err := parseTimeSeriesResponse(value, query)
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			RefID: "A",
+			JSON:  b,
+		}
+		res, err := execute(tctx, query, exemplars)
 		require.NoError(t, err)
 
 		// Test fields
@@ -81,21 +97,32 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 			{Value: 4, Timestamp: 4000},
 			{Value: 5, Timestamp: 5000},
 		}
-		value := make(map[query.TimeSeriesQueryType]interface{})
-		value[query.RangeQueryType] = p.Matrix{
-			&p.SampleStream{
-				Metric: p.Metric{"app": "Application", "tag2": "tag2"},
-				Values: values,
+		result := queryResult{
+			Type: p.ValMatrix,
+			Result: p.Matrix{
+				&p.SampleStream{
+					Metric: p.Metric{"app": "Application", "tag2": "tag2"},
+					Values: values,
+				},
 			},
 		}
-		query := &query.Query{
+
+		qm := query.Model{
 			LegendFormat: "legend {{app}}",
-			Step:         1 * time.Second,
-			Start:        time.Unix(1, 0).UTC(),
-			End:          time.Unix(5, 0).UTC(),
 			UtcOffsetSec: 0,
+			RangeQuery:   true,
 		}
-		res, err := parseTimeSeriesResponse(value, query)
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			TimeRange: backend.TimeRange{
+				From: time.Unix(1, 0).UTC(),
+				To:   time.Unix(5, 0).UTC(),
+			},
+			JSON: b,
+		}
+		tctx := setup()
+		res, err := execute(tctx, query, result)
 		require.NoError(t, err)
 
 		require.Len(t, res, 1)
@@ -118,21 +145,32 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 			{Value: 1, Timestamp: 1000},
 			{Value: 4, Timestamp: 4000},
 		}
-		value := make(map[query.TimeSeriesQueryType]interface{})
-		value[query.RangeQueryType] = p.Matrix{
-			&p.SampleStream{
-				Metric: p.Metric{"app": "Application", "tag2": "tag2"},
-				Values: values,
+		result := queryResult{
+			Type: p.ValMatrix,
+			Result: p.Matrix{
+				&p.SampleStream{
+					Metric: p.Metric{"app": "Application", "tag2": "tag2"},
+					Values: values,
+				},
 			},
 		}
-		query := &query.Query{
+
+		qm := query.Model{
 			LegendFormat: "",
-			Step:         1 * time.Second,
-			Start:        time.Unix(1, 0).UTC(),
-			End:          time.Unix(4, 0).UTC(),
 			UtcOffsetSec: 0,
+			RangeQuery:   true,
 		}
-		res, err := parseTimeSeriesResponse(value, query)
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			TimeRange: backend.TimeRange{
+				From: time.Unix(1, 0).UTC(),
+				To:   time.Unix(4, 0).UTC(),
+			},
+			JSON: b,
+		}
+		tctx := setup()
+		res, err := execute(tctx, query, result)
 
 		require.NoError(t, err)
 		require.Len(t, res, 1)
@@ -149,21 +187,32 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 			{Value: 1, Timestamp: 1000},
 			{Value: 4, Timestamp: 4000},
 		}
-		value := make(map[query.TimeSeriesQueryType]interface{})
-		value[query.RangeQueryType] = p.Matrix{
-			&p.SampleStream{
-				Metric: p.Metric{"app": "Application", "tag2": "tag2"},
-				Values: values,
+		result := queryResult{
+			Type: p.ValMatrix,
+			Result: p.Matrix{
+				&p.SampleStream{
+					Metric: p.Metric{"app": "Application", "tag2": "tag2"},
+					Values: values,
+				},
 			},
 		}
-		query := &query.Query{
+
+		qm := query.Model{
 			LegendFormat: "",
-			Step:         1 * time.Second,
-			Start:        time.Unix(1, 0).UTC(),
-			End:          time.Unix(4, 0).UTC(),
 			UtcOffsetSec: 0,
+			RangeQuery:   true,
 		}
-		res, err := parseTimeSeriesResponse(value, query)
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			TimeRange: backend.TimeRange{
+				From: time.Unix(1, 0).UTC(),
+				To:   time.Unix(4, 0).UTC(),
+			},
+			JSON: b,
+		}
+		tctx := setup()
+		res, err := execute(tctx, query, result)
 
 		require.NoError(t, err)
 		require.Len(t, res, 1)
@@ -178,23 +227,35 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 	})
 
 	t.Run("matrix response with NaN value should be changed to null", func(t *testing.T) {
-		value := make(map[query.TimeSeriesQueryType]interface{})
-		value[query.RangeQueryType] = p.Matrix{
-			&p.SampleStream{
-				Metric: p.Metric{"app": "Application"},
-				Values: []p.SamplePair{
-					{Value: p.SampleValue(math.NaN()), Timestamp: 1000},
+		result := queryResult{
+			Type: p.ValMatrix,
+			Result: p.Matrix{
+				&p.SampleStream{
+					Metric: p.Metric{"app": "Application"},
+					Values: []p.SamplePair{
+						{Value: p.SampleValue(math.NaN()), Timestamp: 1000},
+					},
 				},
 			},
 		}
-		query := &query.Query{
+
+		qm := query.Model{
 			LegendFormat: "",
-			Step:         1 * time.Second,
-			Start:        time.Unix(1, 0).UTC(),
-			End:          time.Unix(4, 0).UTC(),
 			UtcOffsetSec: 0,
+			RangeQuery:   true,
 		}
-		res, err := parseTimeSeriesResponse(value, query)
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			TimeRange: backend.TimeRange{
+				From: time.Unix(1, 0).UTC(),
+				To:   time.Unix(4, 0).UTC(),
+			},
+			JSON: b,
+		}
+
+		tctx := setup()
+		res, err := execute(tctx, query, result)
 		require.NoError(t, err)
 
 		var nilPointer *float64
@@ -203,18 +264,28 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 	})
 
 	t.Run("vector response should be parsed normally", func(t *testing.T) {
-		value := make(map[query.TimeSeriesQueryType]interface{})
-		value[query.RangeQueryType] = p.Vector{
-			&p.Sample{
-				Metric:    p.Metric{"app": "Application", "tag2": "tag2"},
-				Value:     1,
-				Timestamp: 123,
+		qr := queryResult{
+			Type: p.ValVector,
+			Result: p.Vector{
+				&p.Sample{
+					Metric:    p.Metric{"app": "Application", "tag2": "tag2"},
+					Value:     1,
+					Timestamp: 123,
+				},
 			},
 		}
-		query := &query.Query{
+		qm := query.Model{
 			LegendFormat: "legend {{app}}",
+			UtcOffsetSec: 0,
+			InstantQuery: true,
 		}
-		res, err := parseTimeSeriesResponse(value, query)
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			JSON: b,
+		}
+		tctx := setup()
+		res, err := execute(tctx, query, qr)
 		require.NoError(t, err)
 
 		require.Len(t, res, 1)
@@ -235,14 +306,25 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 	})
 
 	t.Run("scalar response should be parsed normally", func(t *testing.T) {
-		value := make(map[query.TimeSeriesQueryType]interface{})
-		value[query.RangeQueryType] = &p.Scalar{
-			Value:     1,
-			Timestamp: 123,
+		qr := queryResult{
+			Type: p.ValScalar,
+			Result: &p.Scalar{
+				Value:     1,
+				Timestamp: 123,
+			},
 		}
-
-		query := &query.Query{}
-		res, err := parseTimeSeriesResponse(value, query)
+		qm := query.Model{
+			LegendFormat: "",
+			UtcOffsetSec: 0,
+			InstantQuery: true,
+		}
+		b, err := json.Marshal(&qm)
+		require.NoError(t, err)
+		query := backend.DataQuery{
+			JSON: b,
+		}
+		tctx := setup()
+		res, err := execute(tctx, query, qr)
 		require.NoError(t, err)
 
 		require.Len(t, res, 1)
@@ -260,23 +342,93 @@ func TestPrometheus_parseTimeSeriesResponse(t *testing.T) {
 	})
 }
 
-func parseTimeSeriesResponse(value map[query.TimeSeriesQueryType]interface{}, query *query.Query) (data.Frames, error) {
-	panic("unimplemented")
+type queryResult struct {
+	Type   p.ValueType `json:"resultType"`
+	Result interface{} `json:"result"`
+}
+
+func execute(tctx *testContext, query backend.DataQuery, qr interface{}) (data.Frames, error) {
+	req := backend.QueryDataRequest{
+		Queries: []backend.DataQuery{query},
+		Headers: map[string]string{},
+	}
+
+	raw, err := json.Marshal(qr)
+	if err != nil {
+		return nil, err
+	}
+
+	promRes := http.Response{
+		StatusCode: 200,
+		Body:       ioutil.NopCloser(bytes.NewReader(raw)),
+	}
+	tctx.httpProvider.setResponse(&promRes)
+
+	res, err := tctx.streaming.ExecuteTimeSeriesQuery(context.Background(), &req)
+	if err != nil {
+		return nil, err
+	}
+
+	return res.Responses[req.Queries[0].RefID].Frames, nil
 }
 
 type testContext struct {
-	httpProvider   *fakeHttpClientProvider
-	clientProvider *client.Provider
+	httpProvider *fakeHttpClientProvider
+	streaming    *streaming.Streaming
+}
+
+func roundTripper(rt sdkhttpclient.RoundTripperFunc) sdkhttpclient.Middleware {
+	return sdkhttpclient.NamedMiddlewareFunc("test-roundtrip", func(opts sdkhttpclient.Options, next http.RoundTripper) http.RoundTripper {
+		return rt
+	})
+}
+
+func setup() *testContext {
+	tracer, err := tracing.InitializeTracerForTest()
+	if err != nil {
+		panic(err)
+	}
+	httpProvider := &fakeHttpClientProvider{
+		opts: sdkhttpclient.Options{
+			Timeouts: &sdkhttpclient.DefaultTimeoutOptions,
+		},
+		res: &http.Response{
+			StatusCode: 200,
+			Body:       ioutil.NopCloser(bytes.NewReader([]byte(`{}`))),
+		},
+	}
+	streaming, _ := streaming.New(
+		httpProvider,
+		setting.NewCfg(),
+		&fakeFeatureToggles{enabled: true},
+		tracer,
+		backend.DataSourceInstanceSettings{URL: "http://localhost:9090", JSONData: json.RawMessage(`{}`)},
+		&fakeLogger{},
+	)
+
+	return &testContext{
+		httpProvider: httpProvider,
+		streaming:    streaming,
+	}
+}
+
+type fakeFeatureToggles struct {
+	enabled bool
+}
+
+func (f *fakeFeatureToggles) IsEnabled(feature string) bool {
+	return f.enabled
 }
 
 type fakeHttpClientProvider struct {
 	httpclient.Provider
-
 	opts sdkhttpclient.Options
+	res  *http.Response
 }
 
 func (p *fakeHttpClientProvider) New(opts ...sdkhttpclient.Options) (*http.Client, error) {
 	p.opts = opts[0]
+	p.opts.Middlewares = append(sdkhttpclient.DefaultMiddlewares(), roundTripper(p.roundTrip))
 	return sdkhttpclient.New(opts[0])
 }
 
@@ -285,15 +437,19 @@ func (p *fakeHttpClientProvider) GetTransport(opts ...sdkhttpclient.Options) (ht
 	return http.DefaultTransport, nil
 }
 
-func (p *fakeHttpClientProvider) middlewares() []string {
-	var middlewareNames []string
-	for _, m := range p.opts.Middlewares {
-		mw, ok := m.(sdkhttpclient.MiddlewareName)
-		if !ok {
-			panic("unexpected middleware type")
-		}
-
-		middlewareNames = append(middlewareNames, mw.MiddlewareName())
-	}
-	return middlewareNames
+func (p *fakeHttpClientProvider) setResponse(res *http.Response) {
+	p.res = res
 }
+
+func (p *fakeHttpClientProvider) roundTrip(req *http.Request) (*http.Response, error) {
+	return p.res, nil
+}
+
+type fakeLogger struct {
+	log.Logger
+}
+
+func (fl *fakeLogger) Debug(testMessage string, ctx ...interface{}) {}
+func (fl *fakeLogger) Info(testMessage string, ctx ...interface{})  {}
+func (fl *fakeLogger) Warn(testMessage string, ctx ...interface{})  {}
+func (fl *fakeLogger) Error(testMessage string, ctx ...interface{}) {}

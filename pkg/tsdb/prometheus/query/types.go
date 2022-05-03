@@ -27,4 +27,5 @@ const (
 	RangeQueryType    TimeSeriesQueryType = "range"
 	InstantQueryType  TimeSeriesQueryType = "instant"
 	ExemplarQueryType TimeSeriesQueryType = "exemplar"
+	UnknownQueryType  TimeSeriesQueryType = "unknown"
 )
