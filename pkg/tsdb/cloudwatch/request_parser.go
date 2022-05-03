@@ -246,6 +246,8 @@ func checkForLabel(model *simplejson.Json) *string {
 		return nil
 	}
 
+	backend.Logger.Info("label", label)
+
 	return &label
 }
 

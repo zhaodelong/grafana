@@ -12,11 +12,6 @@ import (
 
 func (e *cloudWatchExecutor) executeRequest(ctx context.Context, client cloudwatchiface.CloudWatchAPI,
 	metricDataInput *cloudwatch.GetMetricDataInput) ([]*cloudwatch.GetMetricDataOutput, error) {
-
-	for _, v := range metricDataInput.MetricDataQueries {
-		v.Label = nil
-	}
-
 	backend.Logger.Info("metric data input", metricDataInput)
 
 	mdo := make([]*cloudwatch.GetMetricDataOutput, 0)
