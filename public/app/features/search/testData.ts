@@ -3,7 +3,6 @@ import { DashboardSearchItemType, DashboardSection, DashboardSectionItem } from 
 function makeSection(sectionPartial: Partial<DashboardSection>): DashboardSection {
   return {
     title: 'Default title',
-    id: Number.MAX_SAFE_INTEGER - 1,
     score: -99,
     expanded: true,
     type: DashboardSearchItemType.DashFolder,
@@ -15,7 +14,6 @@ function makeSection(sectionPartial: Partial<DashboardSection>): DashboardSectio
 
 const makeSectionItem = (itemPartial: Partial<DashboardSectionItem>): DashboardSectionItem => {
   return {
-    id: Number.MAX_SAFE_INTEGER - 2,
     uid: 'default-uid',
     title: 'Default dashboard title',
     type: DashboardSearchItemType.DashDB,
@@ -28,11 +26,9 @@ const makeSectionItem = (itemPartial: Partial<DashboardSectionItem>): DashboardS
 };
 
 export const generalFolder: DashboardSection = {
-  id: 0,
   title: 'General',
   items: [
     {
-      id: 1,
       uid: 'lBdLINUWk',
       title: 'Test 1',
       uri: 'db/test1',
@@ -43,7 +39,6 @@ export const generalFolder: DashboardSection = {
       checked: true,
     },
     {
-      id: 46,
       uid: '8DY63kQZk',
       title: 'Test 2',
       uri: 'db/test2',
@@ -64,7 +59,6 @@ export const generalFolder: DashboardSection = {
 
 export const searchResults: DashboardSection[] = [
   {
-    id: 2,
     uid: 'JB_zdOUWk',
     title: 'gdev dashboards',
     expanded: false,
@@ -86,7 +80,6 @@ export const sections: DashboardSection[] = [
     expanded: true,
     items: [
       makeSectionItem({
-        id: 1,
         uid: 'lBdLINUWk',
         title: 'Prom dash',
         type: DashboardSearchItemType.DashDB,
@@ -101,7 +94,6 @@ export const sections: DashboardSection[] = [
     expanded: false,
     items: [
       makeSectionItem({
-        id: 4072,
         uid: 'OzAIf_rWz',
         title: 'New dashboard Copy 3',
 
@@ -109,33 +101,29 @@ export const sections: DashboardSection[] = [
         isStarred: false,
       }),
       makeSectionItem({
-        id: 46,
         uid: '8DY63kQZk',
         title: 'Stocks',
         type: DashboardSearchItemType.DashDB,
         isStarred: false,
       }),
       makeSectionItem({
-        id: 20,
         uid: '7MeksYbmk',
         title: 'Alerting with TestData',
         type: DashboardSearchItemType.DashDB,
         isStarred: false,
-        folderId: 2,
+        folderUid: '2',
       }),
       makeSectionItem({
-        id: 4073,
         uid: 'j9SHflrWk',
         title: 'New dashboard Copy 4',
         type: DashboardSearchItemType.DashDB,
         isStarred: false,
-        folderId: 2,
+        folderUid: '2',
       }),
     ],
   }),
 
   makeSection({
-    id: 2,
     uid: 'JB_zdOUWk',
     title: 'gdev dashboards',
     expanded: true,
@@ -146,7 +134,6 @@ export const sections: DashboardSection[] = [
   }),
 
   makeSection({
-    id: 2568,
     uid: 'search-test-data',
     title: 'Search test data folder',
     expanded: false,
@@ -157,7 +144,6 @@ export const sections: DashboardSection[] = [
   }),
 
   makeSection({
-    id: 4074,
     uid: 'iN5TFj9Zk',
     title: 'Test',
     expanded: false,
@@ -168,14 +154,12 @@ export const sections: DashboardSection[] = [
   }),
 
   makeSection({
-    id: 0,
     title: 'General',
     icon: 'folder-open',
     score: 5,
     expanded: true,
     items: [
       makeSectionItem({
-        id: 4069,
         uid: 'LCFWfl9Zz',
         title: 'New dashboard Copy',
         uri: 'db/new-dashboard-copy',
@@ -184,14 +168,12 @@ export const sections: DashboardSection[] = [
         isStarred: false,
       }),
       makeSectionItem({
-        id: 4072,
         uid: 'OzAIf_rWz',
         title: 'New dashboard Copy 3',
         type: DashboardSearchItemType.DashDB,
         isStarred: false,
       }),
       makeSectionItem({
-        id: 1,
         uid: 'lBdLINUWk',
         title: 'Prom dash',
         type: DashboardSearchItemType.DashDB,
@@ -203,21 +185,18 @@ export const sections: DashboardSection[] = [
 
 export const checkedGeneralFolder: DashboardSection[] = [
   makeSection({
-    id: 4074,
     uid: 'other-folder-dash',
     title: 'Test',
     expanded: false,
     type: DashboardSearchItemType.DashFolder,
     items: [
       makeSectionItem({
-        id: 4072,
         uid: 'other-folder-dash-abc',
         title: 'New dashboard Copy 3',
         type: DashboardSearchItemType.DashDB,
         isStarred: false,
       }),
       makeSectionItem({
-        id: 46,
         uid: 'other-folder-dash-def',
         title: 'Stocks',
         type: DashboardSearchItemType.DashDB,
@@ -230,7 +209,6 @@ export const checkedGeneralFolder: DashboardSection[] = [
   }),
 
   makeSection({
-    id: 0,
     title: 'General',
     uid: 'other-folder-abc',
     score: 5,
@@ -239,7 +217,6 @@ export const checkedGeneralFolder: DashboardSection[] = [
     type: DashboardSearchItemType.DashFolder,
     items: [
       makeSectionItem({
-        id: 4069,
         uid: 'general-abc',
         title: 'New dashboard Copy',
         uri: 'db/new-dashboard-copy',
@@ -249,7 +226,6 @@ export const checkedGeneralFolder: DashboardSection[] = [
         checked: true,
       }),
       makeSectionItem({
-        id: 4072,
         uid: 'general-def',
         title: 'New dashboard Copy 3',
         type: DashboardSearchItemType.DashDB,
@@ -257,7 +233,6 @@ export const checkedGeneralFolder: DashboardSection[] = [
         checked: true,
       }),
       makeSectionItem({
-        id: 1,
         uid: 'general-ghi',
         title: 'Prom dash',
         type: DashboardSearchItemType.DashDB,
@@ -270,7 +245,6 @@ export const checkedGeneralFolder: DashboardSection[] = [
 
 export const checkedOtherFolder: DashboardSection[] = [
   makeSection({
-    id: 4074,
     uid: 'other-folder-abc',
     title: 'Test',
     expanded: false,
@@ -278,7 +252,6 @@ export const checkedOtherFolder: DashboardSection[] = [
     type: DashboardSearchItemType.DashFolder,
     items: [
       makeSectionItem({
-        id: 4072,
         uid: 'other-folder-dash-abc',
         title: 'New dashboard Copy 3',
         type: DashboardSearchItemType.DashDB,
@@ -286,7 +259,6 @@ export const checkedOtherFolder: DashboardSection[] = [
         checked: true,
       }),
       makeSectionItem({
-        id: 46,
         uid: 'other-folder-dash-def',
         title: 'Stocks',
         type: DashboardSearchItemType.DashDB,
@@ -300,7 +272,6 @@ export const checkedOtherFolder: DashboardSection[] = [
   }),
 
   makeSection({
-    id: 0,
     title: 'General',
     icon: 'folder-open',
     score: 5,
@@ -308,7 +279,6 @@ export const checkedOtherFolder: DashboardSection[] = [
     type: DashboardSearchItemType.DashFolder,
     items: [
       makeSectionItem({
-        id: 4069,
         uid: 'general-abc',
         title: 'New dashboard Copy',
         uri: 'db/new-dashboard-copy',
@@ -317,14 +287,12 @@ export const checkedOtherFolder: DashboardSection[] = [
         isStarred: false,
       }),
       makeSectionItem({
-        id: 4072,
         uid: 'general-def',
         title: 'New dashboard Copy 3',
         type: DashboardSearchItemType.DashDB,
         isStarred: false,
       }),
       makeSectionItem({
-        id: 1,
         uid: 'general-ghi',
         title: 'Prom dash',
         type: DashboardSearchItemType.DashDB,
@@ -341,7 +309,6 @@ export const folderViewAllChecked: DashboardSection[] = [
     title: '',
     items: [
       makeSectionItem({
-        id: 4072,
         uid: 'other-folder-dash-abc',
         title: 'New dashboard Copy 3',
         type: DashboardSearchItemType.DashDB,
@@ -349,7 +316,6 @@ export const folderViewAllChecked: DashboardSection[] = [
         checked: true,
       }),
       makeSectionItem({
-        id: 46,
         uid: 'other-folder-dash-def',
         title: 'Stocks',
         type: DashboardSearchItemType.DashDB,

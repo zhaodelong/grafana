@@ -45,13 +45,6 @@ export const getVisibleItems = (sections: DashboardSection[]) => {
     return [];
   });
 };
-/**
- * Since Recent and Starred folders don't have id, title field is used as id
- * @param title - title field of the section
- */
-export const getLookupField = (title: string) => {
-  return hasId(title) ? 'id' : 'title';
-};
 
 /**
  * Go through all the folders and items in expanded folders and toggle their selected
@@ -62,16 +55,14 @@ export const getLookupField = (title: string) => {
  */
 export const markSelected = (sections: DashboardSection[], selectedId: string) => {
   return sections.map((result: DashboardSection) => {
-    const lookupField = getLookupField(selectedId);
-    result = { ...result, selected: String(result[lookupField]) === selectedId };
+    result = { ...result, selected: String(result.uid) === selectedId };
 
     if (result.expanded && result.items.length) {
       return {
         ...result,
         items: result.items.map((item) => {
           const [sectionId, itemId] = selectedId.split('-');
-          const lookup = getLookupField(sectionId);
-          return { ...item, selected: String(item.id) === itemId && String(result[lookup]) === sectionId };
+          return { ...item, selected: String(item.uid) === itemId && String(result.uid) === sectionId };
         }),
       };
     }

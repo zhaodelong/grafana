@@ -12,7 +12,6 @@ export enum DashboardSearchItemType {
 }
 
 export interface DashboardSection {
-  id: number;
   uid?: string;
   title: string;
   expanded?: boolean;
@@ -30,11 +29,9 @@ export interface DashboardSection {
 
 export interface DashboardSectionItem {
   checked?: boolean;
-  folderId?: number;
   folderTitle?: string;
   folderUid?: string;
   folderUrl?: string;
-  id: number;
   isStarred: boolean;
   selected?: boolean;
   tags: string[];

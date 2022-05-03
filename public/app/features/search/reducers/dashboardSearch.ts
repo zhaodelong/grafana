@@ -43,7 +43,7 @@ export const searchReducer = (state: DashboardsSearchState, action: SearchAction
     }
     case TOGGLE_SECTION: {
       const section = action.payload;
-      const lookupField = getLookupField(section.title);
+      const lookupField = 'uid'; // getLookupField(section.title);
       return {
         ...state,
         results: state.results.map((result: DashboardSection) => {
@@ -60,7 +60,7 @@ export const searchReducer = (state: DashboardsSearchState, action: SearchAction
         ...state,
         itemsFetching: false,
         results: state.results.map((result: DashboardSection) => {
-          if (section.id === result.id) {
+          if (section.uid === result.uid) {
             return { ...result, items, itemsFetching: false };
           }
           return result;
@@ -72,7 +72,7 @@ export const searchReducer = (state: DashboardsSearchState, action: SearchAction
       if (id) {
         return {
           ...state,
-          results: state.results.map((result) => (result.id === id ? { ...result, itemsFetching: true } : result)),
+          results: state.results.map((result) => (result.uid === id ? { ...result, itemsFetching: true } : result)),
         };
       }
       return state;

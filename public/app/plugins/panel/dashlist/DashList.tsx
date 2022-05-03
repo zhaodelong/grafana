@@ -31,9 +31,9 @@ async function fetchDashboards(options: PanelOptions, replaceVars: InterpolateFu
   }
 
   let recentDashboards: Promise<Dashboard[]> = Promise.resolve([]);
-  let dashIds: number[] = [];
+  let dashIds: string[] = [];
   if (options.showRecentlyViewed) {
-    dashIds = take<number>(impressionSrv.getDashboardOpened(), options.maxItems);
+    dashIds = take<string>(impressionSrv.getDashboardOpened(), options.maxItems); // TODO????  uids!  not ids
     recentDashboards = getBackendSrv().search({ dashboardIds: dashIds, limit: options.maxItems });
   }
 
@@ -53,27 +53,27 @@ async function fetchDashboards(options: PanelOptions, replaceVars: InterpolateFu
   const [starred, searched, recent] = await Promise.all([starredDashboards, searchedDashboards, recentDashboards]);
 
   // We deliberately deal with recent dashboards first so that the order of dash IDs is preserved
-  let dashMap = new Map<number, Dashboard>();
+  let dashMap = new Map<string | undefined, Dashboard>();
   for (const dashId of dashIds) {
-    const dash = recent.find((d) => d.id === dashId);
+    const dash = recent.find((d) => d.uid === dashId);
     if (dash) {
       dashMap.set(dashId, { ...dash, isRecent: true });
     }
   }
 
   searched.forEach((dash) => {
-    if (dashMap.has(dash.id)) {
-      dashMap.get(dash.id)!.isSearchResult = true;
+    if (dashMap.has(dash.uid)) {
+      dashMap.get(dash.uid)!.isSearchResult = true;
     } else {
-      dashMap.set(dash.id, { ...dash, isSearchResult: true });
+      dashMap.set(dash.uid, { ...dash, isSearchResult: true });
     }
   });
 
   starred.forEach((dash) => {
-    if (dashMap.has(dash.id)) {
-      dashMap.get(dash.id)!.isStarred = true;
+    if (dashMap.has(dash.uid)) {
+      dashMap.get(dash.uid)!.isStarred = true;
     } else {
-      dashMap.set(dash.id, { ...dash, isStarred: true });
+      dashMap.set(dash.uid, { ...dash, isStarred: true });
     }
   });
 
@@ -81,7 +81,7 @@ async function fetchDashboards(options: PanelOptions, replaceVars: InterpolateFu
 }
 
 export function DashList(props: PanelProps<PanelOptions>) {
-  const [dashboards, setDashboards] = useState(new Map<number, Dashboard>());
+  const [dashboards, setDashboards] = useState(new Map<string | undefined, Dashboard>());
   useEffect(() => {
     fetchDashboards(props.options, props.replaceVariables).then((dashes) => {
       setDashboards(dashes);
@@ -92,9 +92,9 @@ export function DashList(props: PanelProps<PanelOptions>) {
     e.preventDefault();
     e.stopPropagation();
 
-    const isStarred = await getDashboardSrv().starDashboard(dash.id.toString(), dash.isStarred);
+    const isStarred = await getDashboardSrv().starDashboard(dash.uid!, dash.isStarred);
     const updatedDashboards = new Map(dashboards);
-    updatedDashboards.set(dash.id, { ...dash, isStarred });
+    updatedDashboards.set(dash.uid, { ...dash, isStarred });
     setDashboards(updatedDashboards);
   };
 
@@ -132,7 +132,7 @@ export function DashList(props: PanelProps<PanelOptions>) {
   const renderList = (dashboards: Dashboard[]) => (
     <ul>
       {dashboards.map((dash) => (
-        <li className={css.dashlistItem} key={`dash-${dash.id}`}>
+        <li className={css.dashlistItem} key={`dash-${dash.uid}`}>
           <div className={css.dashlistLink}>
             <div className={css.dashlistLinkBody}>
               <a className={css.dashlistTitle} href={dash.url}>
